@@ -43,21 +43,29 @@ class SemanticReviewer:
             raw = response.read(16385)
         if len(raw) > 16384:
             raise ValueError("semantic response too large")
-        data = json.loads(raw)
+        def unique_fields(pairs):
+            result = {}
+            for key, value in pairs:
+                if key in result:
+                    raise ValueError("duplicate semantic response field")
+                result[key] = value
+            return result
+
+        def invalid_number(_value):
+            raise ValueError("nonfinite semantic response number")
+
+        data = json.loads(raw, object_pairs_hook=unique_fields, parse_constant=invalid_number)
         if type(data) is not dict or set(data) != set(payload["output_fields"]):
             raise ValueError("invalid semantic response shape")
-        import math
-        if any(type(data[k]) not in (int, float) or not math.isfinite(data[k]) or not 0 <= data[k] <= 1 for k in ("mission_alignment_score", "risk_score")):
-            raise ValueError("invalid semantic score")
-        if type(data["reason"]) is not str or len(data["reason"]) > 2000 or type(data["evidence"]) is not list or len(data["evidence"]) > 20 or any(type(item) is not str or len(item) > 500 for item in data["evidence"]):
-            raise ValueError("invalid semantic evidence")
-        order = {"ALLOW": 0, "ASK_HUMAN": 1, "DENY": 2}
-        if data["recommended_decision"] not in order:
-            raise ValueError("invalid semantic decision")
         remote = Intent(**data)
+        remote.validate(reason_limit=2000, evidence_limit=20)
+        order = {"ALLOW": 0, "ASK_HUMAN": 1, "DENY": 2}
         # A probabilistic service can tighten, never relax, the reviewed baseline.
         decision = max((baseline.recommended_decision, remote.recommended_decision), key=order.get)
-        return Intent(min(baseline.mission_alignment_score, remote.mission_alignment_score),
+        combined = Intent(min(baseline.mission_alignment_score, remote.mission_alignment_score),
                       max(baseline.risk_score, remote.risk_score),
                       baseline.reason + "; semantic review: " + remote.reason,
                       baseline.evidence + remote.evidence, decision)
+
+        combined.validate()
+        return combined

@@ -4,7 +4,6 @@ import hashlib
 import hmac
 import json
 import logging
-import math
 import sqlite3
 import time
 from typing import Callable
@@ -197,8 +196,9 @@ class Gateway:
                 else:
                     try:
                         intent = self.evaluator.evaluate(chain[0][1], action, prepared)
-                        if not isinstance(intent, Intent) or intent.recommended_decision not in ("ALLOW", "DENY", "ASK_HUMAN") or any(type(v) not in (int, float) or not math.isfinite(v) or not 0 <= v <= 1 for v in (intent.mission_alignment_score, intent.risk_score)):
+                        if not isinstance(intent, Intent):
                             raise ValueError("invalid evaluator result")
+                        intent.validate()
                         # Ensure diagnostics can be persisted before an effect is executed.
                         encode(intent.dictionary())
                     except Exception:
