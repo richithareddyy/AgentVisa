@@ -48,6 +48,12 @@ class ReadModel:
             rows = db.execute(sql + " ORDER BY sequence LIMIT ?", [after, high, *values, limit + 1]).fetchall()
             return self.page(rows, limit, high, lambda r: {**dict(r), "event": json.loads(r["event"])})
 
+    def checkpoint(self):
+        with self.gateway.read_transaction() as db:
+            row = db.execute("SELECT sequence, event_hash FROM audit ORDER BY sequence DESC LIMIT 1").fetchone()
+            return {"version": 1, "sequence": row["sequence"] if row else 0,
+                    "event_hash": row["event_hash"] if row else "0" * 64}
+
     def visas(self, after=0, limit=25, through=None, agent=None):
         self.bounds(after, limit, through)
         with self.gateway.read_transaction() as db:

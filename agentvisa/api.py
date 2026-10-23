@@ -135,6 +135,10 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
     def approval(body: Review):
         return gateway.approve(body.agent_id, body.request_id, body.approve, body.expected_fingerprint)
 
+    @app.get("/audit/checkpoint", dependencies=[Depends(admin)])
+    def audit_checkpoint():
+        return reads.checkpoint()
+
     @app.get("/audit/events", dependencies=[Depends(admin)])
     def audit_events(after: int = Query(0, ge=0, le=MAX_CURSOR), limit: int = Query(25, ge=1, le=100),
                      through: int | None = Query(None, ge=0, le=MAX_CURSOR),

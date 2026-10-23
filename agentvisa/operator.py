@@ -78,6 +78,11 @@ def parser():
         if name == "approvals":
             listing.add_argument("--include-expired", action="store_true")
     commands.add_parser("integrity")
+    checkpoint_cmd = commands.add_parser("checkpoint")
+    checkpoint_cmd.add_argument("--output", required=True)
+    export_cmd = commands.add_parser("export-audit")
+    export_cmd.add_argument("--checkpoint", required=True)
+    export_cmd.add_argument("--output", required=True)
     for name in ("inspect", "approve", "reject"):
         cmd = commands.add_parser(name)
         cmd.add_argument("--agent", required=True)
@@ -96,6 +101,11 @@ def parser():
 
 def run(args, client: ControlClient):
     command = args.command
+    if command in ("checkpoint", "export-audit"):
+        from .audit_export import save_checkpoint, export_audit
+        if command == "checkpoint":
+            return save_checkpoint(client, args.output)
+        return export_audit(client, args.checkpoint, args.output)
     if command == "draft":
         destination = Path(args.output)
         if destination.exists():

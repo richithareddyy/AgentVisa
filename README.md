@@ -71,3 +71,5 @@ The offline intent baseline combines trusted catalog categories with narrow revi
 - [Security assumptions and production gaps](SECURITY.md)
 
 An optional MCP stdio bridge is available with `pip install -e '.[mcp]' -c requirements.lock`. There is no MCP Streamable HTTP endpoint, OAuth issuer, real payment adapter or browser console in this version. The API and operator snapshot provide the control surface. Agents must run outside the trusted gateway process, without direct tool credentials or database access.
+
+See [audit exports and independently held checkpoints](docs/audit-exports.md) for offline prefix verification and its trust limitations.
