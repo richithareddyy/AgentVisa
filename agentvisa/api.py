@@ -3,12 +3,14 @@ import hmac
 import json
 import os
 import sqlite3
-from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from typing import Literal
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, Query
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field
 from .gateway import Gateway
 from .models import Action, Contract, draft
+from .queries import ReadModel, MAX_CURSOR
 
 
 class StrictModel(BaseModel):
@@ -72,6 +74,7 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
         raise ValueError("distinct admin/agent credentials of at least 32 characters required")
     app = FastAPI(title="AgentVisa", version="0.1.0", description="Mission-scoped authorization and simulated protected execution.")
     app.add_middleware(BodyLimit)
+    reads = ReadModel(gateway)
     bearer = HTTPBearer(auto_error=False)
 
     def token(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)) -> str:
@@ -131,6 +134,31 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
     @app.post("/approvals", dependencies=[Depends(admin)])
     def approval(body: Review):
         return gateway.approve(body.agent_id, body.request_id, body.approve, body.expected_fingerprint)
+
+    @app.get("/audit/events", dependencies=[Depends(admin)])
+    def audit_events(after: int = Query(0, ge=0, le=MAX_CURSOR), limit: int = Query(25, ge=1, le=100),
+                     through: int | None = Query(None, ge=0, le=MAX_CURSOR),
+                     agent: str | None = Query(None, max_length=100), visa: str | None = Query(None, max_length=150),
+                     decision: Literal["ALLOW", "DENY", "ASK_HUMAN"] | None = None, blocked: bool = False):
+        return reads.audit(after, limit, through, agent, visa, decision, blocked)
+
+    @app.get("/visas", dependencies=[Depends(admin)])
+    def list_visas(after: int = Query(0, ge=0, le=MAX_CURSOR), limit: int = Query(25, ge=1, le=100),
+                   through: int | None = Query(None, ge=0, le=MAX_CURSOR), agent: str | None = Query(None, max_length=100)):
+        return reads.visas(after, limit, through, agent)
+
+    @app.get("/approvals", dependencies=[Depends(admin)])
+    def list_approvals(after: int = Query(0, ge=0, le=MAX_CURSOR), limit: int = Query(25, ge=1, le=100),
+                       through: int | None = Query(None, ge=0, le=MAX_CURSOR), agent: str | None = Query(None, max_length=100),
+                       include_expired: bool = False):
+        return reads.approvals(after, limit, through, agent, include_expired)
+
+    @app.get("/approvals/inspect", dependencies=[Depends(admin)])
+    def inspect_approval(agent: str = Query(..., min_length=1, max_length=100), request_id: str = Query(..., min_length=1, max_length=100)):
+        try:
+            return reads.inspect(agent, request_id)
+        except LookupError:
+            raise HTTPException(404, "outstanding approval not found") from None
 
     @app.get("/control", dependencies=[Depends(admin)])
     def control():

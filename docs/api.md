@@ -30,7 +30,7 @@ For a purchase, use a new request ID, tool `purchase`, resource `vendor:approved
 
 ## Human review and edits
 
-GET `/control` as administrator to see visas, pending/approved requests, effects and audit events. Each pending record contains its exact action and visa reference; the visa contains the mission.
+Use administrator-only GET `/visas`, `/approvals` and `/audit/events` for bounded lists. GET `/approvals/inspect?agent=procurement&request_id=monitor-purchase-1` returns the exact action, mission, fingerprint and current review state. See [pagination](pagination.md). The legacy `/control` snapshot remains available for local diagnostics.
 
 POST `/approvals` as administrator:
 

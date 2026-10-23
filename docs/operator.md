@@ -34,7 +34,7 @@ python -m agentvisa.operator --config .agentvisa.local.json inspect \
 
 Inspection displays the exact action and arguments, mission, visa status, approval deadline, cost, impact, reason, intent diagnostics, deterministic checks and a 64-character action fingerprint. Untrusted content is JSON-escaped so embedded terminal control characters are printed as data.
 
-The fingerprint identifies the exact stored action, not a model's claim or a policy override. Inspection is a snapshot. Policy is rechecked when the agent retries, even after a human approves.
+The fingerprint identifies the exact stored action, not a model's claim or a policy override. Exact-request inspection is a snapshot using the server clock for expiration. Policy is rechecked when the agent retries, even after a human approves.
 
 ## Approve or reject once
 
@@ -68,7 +68,7 @@ python -m agentvisa.operator --config .agentvisa.local.json audit --blocked --li
 python -m agentvisa.operator --config .agentvisa.local.json integrity
 ```
 
-Limits range from 1 to 1000. Filtering happens after fetching the existing control snapshot, so this is a local development workflow, not a paginated production audit service. Integrity failure exits nonzero. The local audit hash chain is not externally anchored or tamper-proof.
+Limits range from 1 to 100. Lists return one oldest-first page plus `has_more`, `next_after` and `through`; continue with `--after` and `--through` using unchanged filters. Filtering happens in the database. `visas`, `approvals` and `delegations` support the same paging flags and `--agent`; approval queues also support `--include-expired`. See [pagination semantics](pagination.md), including mutable queues and database maintenance limitations. Integrity failure exits nonzero. The local audit hash chain is not externally anchored or tamper-proof.
 
 ## Failures and credentials
 

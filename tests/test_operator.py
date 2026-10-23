@@ -11,7 +11,8 @@ from fastapi.testclient import TestClient
 from agentvisa.api import create_app
 from agentvisa.gateway import Gateway
 from agentvisa.models import Action, draft
-from agentvisa.operator import ControlClient, OperatorError, parser, run, review_view
+from agentvisa.queries import ReadModel
+from agentvisa.operator import ControlClient, OperatorError, parser, run
 
 ADMIN = "admin-" + "a" * 40
 AGENT = "agent-" + "b" * 40
@@ -94,7 +95,7 @@ def test_expired_review_cannot_approve(system):
     pending(gateway)
     with gateway.transaction() as db:
         db.execute("UPDATE requests SET deadline=1")
-    review = review_view(gateway.snapshot(), "procurement", "buy")
+    review = ReadModel(gateway).inspect("procurement", "buy")
     assert review["expired"]
     with pytest.raises(OperatorError):
         run(parser().parse_args(["approve", "--agent", "procurement", "--request-id", "buy", "--fingerprint", review["fingerprint"]]), client)
@@ -103,7 +104,7 @@ def test_expired_review_cannot_approve(system):
 def test_reject_revoke_audit_and_delegations(system):
     gateway, client = system
     action = pending(gateway)
-    review = review_view(gateway.snapshot(), "procurement", "buy")
+    review = ReadModel(gateway).inspect("procurement", "buy")
     run(parser().parse_args(["reject", "--agent", "procurement", "--request-id", "buy", "--fingerprint", review["fingerprint"]]), client)
     assert gateway.execute("procurement", action)["decision"] == "DENY"
     blocked = run(parser().parse_args(["audit", "--blocked", "--limit", "1"]), client)
@@ -186,3 +187,15 @@ def test_cli_against_real_server(tmp_path):
             assert "403" in denied.stderr and AGENT not in denied.stderr
     finally:
         server.terminate(); server.wait(timeout=10)
+
+
+def test_operator_uses_pages_not_snapshot(system):
+    gateway, client = system
+    pending(gateway)
+    for args in (["visas", "--limit", "1"], ["approvals", "--limit", "1"], ["audit", "--limit", "1", "--agent", "procurement"], ["delegations", "--limit", "1"], ["inspect", "--agent", "procurement", "--request-id", "buy"]):
+        run(parser().parse_args(args), client)
+    assert all(path != "/control" for _, path, _ in client.calls)
+    first = run(parser().parse_args(["audit", "--limit", "1"]), client)
+    assert first["has_more"]
+    second = run(parser().parse_args(["audit", "--limit", "1", "--after", str(first["next_after"]), "--through", str(first["through"])]), client)
+    assert first["audit"][0]["sequence"] < second["audit"][0]["sequence"]

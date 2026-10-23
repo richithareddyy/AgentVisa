@@ -58,6 +58,19 @@ class Gateway:
         finally:
             db.close()
 
+    @contextmanager
+    def read_transaction(self):
+        """Consistent read snapshot without reserving the SQLite writer lock."""
+        db = sqlite3.connect(self.path, timeout=15, isolation_level=None)
+        db.row_factory = sqlite3.Row
+        try:
+            db.execute("PRAGMA query_only=ON")
+            db.execute("BEGIN")
+            yield db
+        finally:
+            db.rollback()
+            db.close()
+
     def _audit(self, db, event: dict) -> None:
         payload = encode({"timestamp": int(self.clock()), **event})
         previous = db.execute("SELECT event_hash FROM audit ORDER BY sequence DESC LIMIT 1").fetchone()
@@ -232,7 +245,7 @@ class Gateway:
             }
 
     def verify_audit(self) -> bool:
-        with self.transaction() as db:
+        with self.read_transaction() as db:
             previous = "0" * 64
             for row in db.execute("SELECT * FROM audit ORDER BY sequence"):
                 digest = hashlib.sha256((previous + row["event"]).encode()).hexdigest()

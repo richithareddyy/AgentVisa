@@ -26,6 +26,7 @@ flowchart LR
 | `semantic.py` | Optional remote review that cannot relax the baseline |
 | `gateway.py` | Transactions, budgets, approvals, effects and audit |
 | `api.py` | Credential separation, bounded HTTP bodies and operator routes |
+| `queries.py` | Bounded keyset reads, filters and exact approval inspection |
 | `operator.py` | Human-only control client and exact-action review workflow |
 | `transport.py` | Shared validation of trusted gateway origins |
 | `mcp_server.py` | Agent-only stdio bridge to the same HTTP enforcement boundary |
@@ -54,3 +55,5 @@ The hash chain is locally verifiable, not tamper-proof. A database administrator
 SQLite is a local single-host ledger. Semantic review currently holds the writer transaction; remote latency reduces throughput. Production should perform expensive review outside the critical section and then revalidate versioned policy and effect metadata before reserving authority.
 
 All effects are database records in the same transaction. Real payments/messages require durable reservations or an outbox, provider idempotency, reconciliation and unknown-outcome handling. Replacing the insert with an HTTP call would invalidate the present atomicity guarantee.
+
+Operator list queries use read-only SQLite transactions and captured upper insertion bounds. They do not reserve the writer lock with BEGIN IMMEDIATE. In SQLite rollback-journal mode, an active read transaction can still delay a writer commit. Additive indexes are created on startup without rewriting existing audit events. See [pagination semantics](pagination.md).

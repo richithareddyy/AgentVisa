@@ -66,3 +66,21 @@ def test_approval_fingerprint_checked_by_api(client):
     body["expected_fingerprint"] = request["fingerprint"]
     assert client.post("/approvals", json=body, headers=auth(AGENT)).status_code == 403
     assert client.post("/approvals", json=body, headers=auth(ADMIN)).status_code == 200
+
+
+@pytest.mark.parametrize("path", ["/audit/events", "/visas", "/approvals", "/approvals/inspect?agent=a&request_id=one"])
+def test_bounded_reads_require_admin(client, path):
+    assert client.get(path).status_code == 401
+    assert client.get(path, headers=auth(AGENT)).status_code == 403
+
+
+@pytest.mark.parametrize("query", ["limit=101", "limit=0", "after=-1", "through=-1", "after=9223372036854775808", "decision=PERMIT"])
+def test_bad_audit_query_is_rejected(client, query):
+    assert client.get("/audit/events?" + query, headers=auth(ADMIN)).status_code == 422
+
+
+def test_single_review_lookup_is_exact_and_missing_is_404(client):
+    issue(client)
+    assert client.get("/approvals/inspect?agent=a&request_id=missing", headers=auth(ADMIN)).status_code == 404
+    page = client.get("/visas?limit=1", headers=auth(ADMIN)).json()
+    assert len(page["items"]) == 1 and page["next_after"] is None

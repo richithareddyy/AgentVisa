@@ -5,9 +5,8 @@ import os
 from pathlib import Path
 import re
 import sys
-import time
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 from .models import Contract
@@ -41,7 +40,7 @@ class ControlClient:
             with self.opener.open(req, timeout=5) as response:
                 raw = response.read(8 * 1024 * 1024 + 1)
             if len(raw) > 8 * 1024 * 1024:
-                raise OperatorError("Control snapshot too large; use a smaller deployment or paginated API")
+                raise OperatorError("Response too large; request a smaller page")
             result = json.loads(raw)
             if not isinstance(result, dict):
                 raise ValueError("unexpected response")
@@ -52,22 +51,11 @@ class ControlClient:
             raise OperatorError("Gateway response unavailable or invalid; outcome unknown. Inspect state before retrying a mutation") from None
 
 
-def review_view(snapshot: dict, agent: str, request_id: str) -> dict:
-    match = next((r for r in snapshot["approvals"] if r["principal"] == agent and r["id"] == request_id), None)
-    if match is None:
-        raise OperatorError("No outstanding request for that exact agent and request ID")
-    visa_id = match["action"]["visa_id"]
-    visa = next((v for v in snapshot["visas"] if v["id"] == visa_id), None)
-    if visa is None:
-        raise OperatorError("Request visa is unavailable")
-    response = match["response"]
-    return {"agent": agent, "request_id": request_id, "fingerprint": match["fingerprint"],
-            "visa_id": visa_id, "mission": visa["contract"]["mission"], "visa_status": visa["status"],
-            "approval_status": match["approval"], "deadline": match["deadline"],
-            "expired": int(time.time()) >= match["deadline"], "action": match["action"],
-            "cost_cents": response.get("cost_cents"), "impact": response.get("estimated_impact"),
-            "reason": response["reason"], "intent": response.get("intent"),
-            "policy_checks": response.get("policy_checks", [])}
+def page_arguments(command):
+    command.add_argument("--limit", type=int, default=25)
+    command.add_argument("--after", type=int, default=0)
+    command.add_argument("--through", type=int)
+    command.add_argument("--agent")
 
 
 def parser():
@@ -84,9 +72,11 @@ def parser():
         cmd.add_argument("--contract", required=True)
         if name == "modify":
             cmd.add_argument("--visa", required=True)
-    commands.add_parser("visas")
-    commands.add_parser("approvals")
-    commands.add_parser("delegations")
+    for name in ("visas", "approvals", "delegations"):
+        listing = commands.add_parser(name)
+        page_arguments(listing)
+        if name == "approvals":
+            listing.add_argument("--include-expired", action="store_true")
     commands.add_parser("integrity")
     for name in ("inspect", "approve", "reject"):
         cmd = commands.add_parser(name)
@@ -97,7 +87,9 @@ def parser():
     revoke = commands.add_parser("revoke")
     revoke.add_argument("--visa", required=True)
     audit = commands.add_parser("audit")
-    audit.add_argument("--limit", type=int, default=25)
+    page_arguments(audit)
+    audit.add_argument("--visa")
+    audit.add_argument("--decision", choices=["ALLOW", "DENY", "ASK_HUMAN"])
     audit.add_argument("--blocked", action="store_true")
     return root
 
@@ -129,20 +121,28 @@ def run(args, client: ControlClient):
         if result.get("valid") is not True:
             raise OperatorError("Audit integrity verification failed")
         return result
-    if command == "audit" and not 1 <= args.limit <= 1000:
-        raise OperatorError("Audit limit must be between 1 and 1000")
+    if command in ("audit", "visas", "approvals", "delegations"):
+        if not 1 <= args.limit <= 100 or not 0 <= args.after <= 2**63 - 1 or (args.through is not None and not 0 <= args.through <= 2**63 - 1):
+            raise OperatorError("Page limit must be 1..100 and cursors nonnegative 64-bit integers")
+        params = {"limit": args.limit, "after": args.after}
+        for key in ("through", "agent", "visa", "decision"):
+            if getattr(args, key, None) is not None:
+                params[key] = getattr(args, key)
+        if getattr(args, "blocked", False):
+            params["blocked"] = "true"
+        if getattr(args, "include_expired", False):
+            params["include_expired"] = "true"
+        path = {"audit": "/audit/events", "visas": "/visas", "delegations": "/visas", "approvals": "/approvals"}[command]
+        result = client.request("GET", path + "?" + urlencode(params))
+        items = result.pop("items")
+        if command == "delegations":
+            items = [{"cursor": v["cursor"], "visa_id": v["id"], "parent": v["parent"], "agent": v["contract"]["agent_id"],
+                      "status": v["status"], "spent_cents": v["spent"]} for v in items]
+        return {command: items, **result}
     if command in ("approve", "reject") and not re.fullmatch(r"[a-f0-9]{64}", args.fingerprint):
         raise OperatorError("Fingerprint must be the 64-character lowercase hash from inspect")
-    snapshot = client.request("GET", "/control")
-    if command == "visas":
-        return {"visas": snapshot["visas"]}
-    if command == "delegations":
-        return {"delegations": [{"visa_id": v["id"], "parent": v["parent"], "agent": v["contract"]["agent_id"],
-                                  "status": v["status"], "spent_cents": v["spent"]} for v in snapshot["visas"]]}
-    if command == "approvals":
-        return {"approvals": [review_view(snapshot, r["principal"], r["id"]) for r in snapshot["approvals"]]}
     if command in ("inspect", "approve", "reject"):
-        review = review_view(snapshot, args.agent, args.request_id)
+        review = client.request("GET", "/approvals/inspect?" + urlencode({"agent": args.agent, "request_id": args.request_id}))
         if command == "inspect":
             return review
         if review["fingerprint"] != args.fingerprint or review["approval_status"] != "pending" or review["expired"]:
@@ -150,11 +150,6 @@ def run(args, client: ControlClient):
         result = client.request("POST", "/approvals", {"agent_id": args.agent, "request_id": args.request_id,
                                                        "approve": command == "approve", "expected_fingerprint": args.fingerprint})
         return {"review": review, "result": result, "execution": "No tool executed by this command; the agent must retry its exact action"}
-    if command == "audit":
-        rows = snapshot["audit"]
-        if args.blocked:
-            rows = [r for r in rows if r["event"].get("decision") == "DENY" or r["event"].get("event") == "delegation_denied"]
-        return {"audit": rows[-args.limit:]}
     raise OperatorError("Unsupported operator command")
 
 
