@@ -95,7 +95,9 @@ class Gateway:
                 chain = self._chain(db, parent)
                 if chain[0][1].agent_id != principal:
                     raise ValueError("parent visa does not belong to caller")
-                for row, contract in chain:
+                for depth, (row, contract) in enumerate(chain):
+                    if depth + 1 > contract.delegation_depth:
+                        raise ValueError("ancestor delegation depth exceeded")
                     if row["status"] != "active" or contract.expires_at <= int(self.clock()):
                         raise ValueError("ancestor is inactive or expired")
                 attenuation(chain[0][1], child)
@@ -165,7 +167,8 @@ class Gateway:
                 if chain[0][1].agent_id != principal:
                     raise ValueError("visa identity does not match authenticated caller")
                 prepared = prepare(action)
-                for row, contract in chain:
+                for depth, (row, contract) in enumerate(chain):
+                    policy_checks.append({"visa_id": row["id"], "check": "delegation_depth", "passed": depth <= contract.delegation_depth})
                     policy_checks.extend({"visa_id": row["id"], **check} for check in checks(contract, row["status"], row["spent"], row["actions"], action, prepared, now))
                 failures = [p["check"] for p in policy_checks if not p["passed"]]
                 if failures:
