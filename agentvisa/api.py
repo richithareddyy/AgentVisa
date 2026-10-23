@@ -24,6 +24,7 @@ class Review(StrictModel):
     agent_id: str
     request_id: str
     approve: bool
+    expected_fingerprint: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
 
 
 class ActionBody(StrictModel):
@@ -129,7 +130,7 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
 
     @app.post("/approvals", dependencies=[Depends(admin)])
     def approval(body: Review):
-        return gateway.approve(body.agent_id, body.request_id, body.approve)
+        return gateway.approve(body.agent_id, body.request_id, body.approve, body.expected_fingerprint)
 
     @app.get("/control", dependencies=[Depends(admin)])
     def control():

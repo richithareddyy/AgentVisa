@@ -2,13 +2,13 @@
 import asyncio
 import json
 import os
-from urllib.parse import urlsplit
 from typing import Any
 
 import httpx2
 from mcp.server import MCPServer
 
 from .api import ActionBody
+from .transport import gateway_origin
 
 
 class GatewayCallError(RuntimeError):
@@ -17,19 +17,10 @@ class GatewayCallError(RuntimeError):
 
 class GatewayClient:
     def __init__(self, base_url: str, agent_token: str, *, transport=None):
-        parsed = urlsplit(base_url)
-        if (parsed.scheme not in ("https", "http") or not parsed.hostname
-                or parsed.username is not None or parsed.password is not None
-                or parsed.path not in ("", "/") or parsed.query or parsed.fragment
-                or any(c.isspace() for c in base_url)):
-            raise ValueError("gateway URL must be a plain HTTPS origin or loopback HTTP origin")
-        if parsed.scheme == "http" and parsed.hostname not in ("127.0.0.1", "::1"):
-            raise ValueError("plain HTTP is permitted only for literal loopback addresses")
-        if parsed.port is not None and not 1 <= parsed.port <= 65535:
-            raise ValueError("invalid gateway port")
+        origin = gateway_origin(base_url)
         if len(agent_token) < 32 or not agent_token.isascii() or any(c.isspace() for c in agent_token):
             raise ValueError("a nonempty agent credential of at least 32 ASCII characters is required")
-        self.endpoint = base_url.rstrip("/") + "/execute"
+        self.endpoint = origin + "/execute"
         self._token, self._transport = agent_token, transport
 
     async def execute(self, action: ActionBody) -> dict:

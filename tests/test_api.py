@@ -54,3 +54,15 @@ def test_no_insecure_defaults(tmp_path):
 
 def test_invalid_contract(client):
     assert client.post("/visas", json={"agent_id": "a", "mission": "Buy monitor", "spending_limit": True}, headers=auth(ADMIN)).status_code == 422
+
+
+def test_approval_fingerprint_checked_by_api(client):
+    visa = issue(client)
+    action = {"request_id": "review", "visa_id": visa, "tool": "purchase", "resource": "vendor:approved", "arguments": {"product_id": "monitor-pro", "quantity": 1}}
+    assert client.post("/execute", json=action, headers=auth(AGENT)).json()["decision"] == "ASK_HUMAN"
+    request = client.get("/control", headers=auth(ADMIN)).json()["approvals"][0]
+    body = {"agent_id": "a", "request_id": "review", "approve": True, "expected_fingerprint": "0" * 64}
+    assert client.post("/approvals", json=body, headers=auth(ADMIN)).status_code == 422
+    body["expected_fingerprint"] = request["fingerprint"]
+    assert client.post("/approvals", json=body, headers=auth(AGENT)).status_code == 403
+    assert client.post("/approvals", json=body, headers=auth(ADMIN)).status_code == 200

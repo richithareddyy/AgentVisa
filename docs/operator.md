@@ -1,0 +1,77 @@
+# Human operator workflow
+
+The operator CLI uses only authenticated human-control routes. It never calls `/execute` and never reads or writes the gateway database directly. It can use an administrator-only JSON file containing `admin_token`, or `AGENTVISA_ADMIN_TOKEN` from its environment. Do not put credentials in command-line arguments, source control or agent configuration.
+
+For a local development session, the private config created by `python -m agentvisa init` is also accepted. Start the gateway in another terminal with `python -m agentvisa serve`.
+
+All examples assume the repository root and activated virtual environment. Global flags precede the command. Add `--url https://your-gateway.example` before the command for a trusted remote origin; loopback `http://127.0.0.1:8000` is the default.
+
+## Draft, inspect and issue a visa
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json draft \
+  --agent procurement --mission 'Buy a monitor under $300.' --output monitor-contract.json
+```
+
+Open the contract file and review tools, resources, spending limit, maximum transaction, approval threshold, expiration and delegation depth. Monetary values are integer USD cents. The draft file uses owner-only permissions and is never overwritten by the draft command. Drafting does not issue authority.
+
+After reviewing or editing it:
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json issue --contract monitor-contract.json
+python -m agentvisa.operator --config .agentvisa.local.json visas
+```
+
+Give the returned visa ID and its own credential to the agent. Do not give it the human config.
+
+## Inspect pending actions
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json approvals
+python -m agentvisa.operator --config .agentvisa.local.json inspect \
+  --agent procurement --request-id monitor-purchase-1
+```
+
+Inspection displays the exact action and arguments, mission, visa status, approval deadline, cost, impact, reason, intent diagnostics, deterministic checks and a 64-character action fingerprint. Untrusted content is JSON-escaped so embedded terminal control characters are printed as data.
+
+The fingerprint identifies the exact stored action, not a model's claim or a policy override. Inspection is a snapshot. Policy is rechecked when the agent retries, even after a human approves.
+
+## Approve or reject once
+
+Copy the fingerprint from inspection into the command:
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json approve \
+  --agent procurement --request-id monitor-purchase-1 --fingerprint EXACT_HASH_FROM_INSPECT
+```
+
+Replace `approve` with `reject` to deny the request. The CLI refuses a mismatched hash, expired request or non-pending request before sending approval. The API also checks the expected fingerprint atomically against the pending record, closing the gap between inspection and submission. The recorded human-review event includes the fingerprint.
+
+Approval does not execute the tool. The agent must retry its identical action and request ID through HTTP or MCP. Hard constraints and semantic denial still apply. A rejected or invalidated request cannot be reused to execute; a new proposal needs a new request ID.
+
+## Modify, revoke and inspect delegation
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json modify \
+  --visa VISA_ID --contract revised-contract.json
+python -m agentvisa.operator --config .agentvisa.local.json revoke --visa VISA_ID
+python -m agentvisa.operator --config .agentvisa.local.json delegations
+```
+
+Modification submits a complete reviewed contract and preserves the existing identity/mission. Edits invalidate outstanding approvals for the affected subtree. Revocation blocks new descendant effects. Delegation output includes visa IDs, parent pointers, agents, status and cumulative spending; it does not create child credentials.
+
+## Investigate decisions
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json audit --limit 25
+python -m agentvisa.operator --config .agentvisa.local.json audit --blocked --limit 25
+python -m agentvisa.operator --config .agentvisa.local.json integrity
+```
+
+Limits range from 1 to 1000. Filtering happens after fetching the existing control snapshot, so this is a local development workflow, not a paginated production audit service. Integrity failure exits nonzero. The local audit hash chain is not externally anchored or tamper-proof.
+
+## Failures and credentials
+
+Commands exit nonzero on invalid input, stale reviews, authentication errors or transport failure. Error output does not echo bearer tokens or upstream response bodies. Redirects and ambient proxies are disabled; HTTP is restricted to literal loopback addresses. No command automatically retries a mutation. A response lost after issuing a visa or changing policy can leave an unknown outcome: inspect current state before repeating it. Issuance itself does not have an idempotency key.
+
+This is a single-administrator development control plane, not a multi-user identity system. The fingerprint requirement is enforced by the CLI and checked by the API when supplied. Older API clients may omit it for compatibility; their approvals still bind the immutable stored request, but they do not prove an explicit inspect-and-copy workflow.

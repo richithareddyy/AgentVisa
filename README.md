@@ -31,7 +31,7 @@ python -m agentvisa serve
 
 Initialization creates `.agentvisa.local.json` with random, separate administrator and agent credentials and owner-only permissions. It refuses to overwrite an existing file. Credentials and databases are ignored by Git. Keep the config private; an agent receives only its own token.
 
-The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `http://127.0.0.1:8000/docs`. The configured agent is `procurement`. Follow the [API walkthrough](docs/api.md) to issue a visa and approve a purchase.
+The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `http://127.0.0.1:8000/docs`. The configured agent is `procurement`. Use the [operator CLI](docs/operator.md) to draft and issue visas, inspect exact pending actions, approve or reject requests, revoke authority and review audits. The [API walkthrough](docs/api.md) documents direct calls.
 
 ## Implemented behavior
 
@@ -41,6 +41,7 @@ The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `htt
 - Hard policy denials cannot be overridden by human approval or semantic recommendations.
 - Exact-action approvals expire within five minutes, are rechecked before execution and cannot produce duplicate effects. Policy edits invalidate affected outstanding approvals.
 - Durable idempotency, transactional simulated effects, structured decision logging and a locally verifiable audit hash chain.
+- A human operator CLI supports reviewed contract files, fingerprint-bound approvals, revocation, delegation inspection and audit filtering.
 - An agent-only MCP stdio bridge forwards actions to the gateway, with exact-response binding, bounded transport and no human-control tools.
 - Optional HTTPS semantic review can tighten the baseline. Uncertainty or service failure requires human review. No remote service is enabled by default.
 
@@ -63,6 +64,7 @@ The offline intent baseline combines trusted catalog categories with narrow revi
 
 - [Architecture and transaction semantics](docs/architecture.md)
 - [API walkthrough](docs/api.md)
+- [Human operator CLI](docs/operator.md)
 - [MCP agent integration](docs/mcp.md)
 - [Optional semantic service protocol](docs/semantic.md)
 - [Security assumptions and production gaps](SECURITY.md)

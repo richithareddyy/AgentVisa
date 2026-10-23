@@ -1,6 +1,7 @@
 """Transactional authorization, approvals, budgets and simulated tool effects."""
 from contextlib import contextmanager
 import hashlib
+import hmac
 import json
 import logging
 import math
@@ -133,16 +134,18 @@ class Gateway:
                     db.execute("UPDATE requests SET approval='invalidated' WHERE principal=? AND id=?", (row["principal"], row["id"]))
             self._audit(db, {"event": "visa_modified", "visa_id": visa_id, "before": old.dictionary(), "after": contract.dictionary()})
 
-    def approve(self, principal: str, request_id: str, approve: bool) -> dict:
+    def approve(self, principal: str, request_id: str, approve: bool, expected_fingerprint: str | None = None) -> dict:
         if type(approve) is not bool:
             raise ValueError("approve must be boolean")
         with self.transaction() as db:
             row = db.execute("SELECT * FROM requests WHERE principal=? AND id=?", (principal, request_id)).fetchone()
             if row is None or row["approval"] != "pending" or int(self.clock()) >= row["deadline"]:
                 raise ValueError("request is not pending or approval has expired")
+            if expected_fingerprint is not None and not hmac.compare_digest(row["fingerprint"], expected_fingerprint):
+                raise ValueError("review fingerprint does not match the stored action")
             state = "approved" if approve else "rejected"
             db.execute("UPDATE requests SET approval=? WHERE principal=? AND id=?", (state, principal, request_id))
-            self._audit(db, {"event": "human_review", "agent": principal, "request_id": request_id, "outcome": state})
+            self._audit(db, {"event": "human_review", "agent": principal, "request_id": request_id, "outcome": state, "fingerprint": row["fingerprint"]})
             return {"approval": state, "request_id": request_id}
 
     def execute(self, principal: str, action: Action) -> dict:

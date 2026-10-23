@@ -35,10 +35,10 @@ GET `/control` as administrator to see visas, pending/approved requests, effects
 POST `/approvals` as administrator:
 
 ```json
-{"agent_id":"procurement","request_id":"monitor-purchase-1","approve":true}
+{"agent_id":"procurement","request_id":"monitor-purchase-1","approve":true,"expected_fingerprint":"replace-with-64-character-fingerprint-from-control"}
 ```
 
-Use false to reject. The agent retries the identical action after approval. Policy is rechecked, and subsequent successful retries return the stored result with `replayed: true`.
+The optional `expected_fingerprint` is checked against the stored action; the operator CLI always requires it. Omit the field only for legacy clients that do not implement this review check. Use false to reject. The agent retries the identical action after approval. Policy is rechecked, and subsequent successful retries return the stored result with `replayed: true`.
 
 PUT the complete replacement contract to `/visas/{visa_id}` as administrator to edit policy. Mission and identity are immutable; changes require a new visa. Edits invalidate affected approvals. POST `/visas/{visa_id}/revoke` prevents new effects under the visa and descendants.
 

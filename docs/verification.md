@@ -3,10 +3,11 @@
 Verified locally on October 23, 2026 using Python 3.14.7 and the dependency versions in `requirements.lock`.
 
 - Editable package installation succeeded with the documented constraints.
-- 94 unit/integration tests passed with the MCP extra installed, including concurrent sibling budgets and request idempotency, ancestor revocation/depth changes, approval mutation/expiry, malformed semantic scores, private credential initialization and audit-write rollback.
+- 109 unit/integration tests passed with the MCP extra installed, including concurrent sibling budgets and request idempotency, ancestor revocation/depth changes, approval mutation/expiry, malformed semantic scores, private credential initialization and audit-write rollback.
 - The 42-case evaluation matched every expected decision, with zero automatic allows among 33 dangerous or review-required cases. See the evaluation methodology for the narrow scope of this result.
 - A real loopback HTTP server passed issuance, human approval, execution, retry, revocation and audit-integrity checks. Temporary credentials and state were removed after the check.
 - A real MCP SDK client launched the stdio bridge and verified tool discovery, search, mutated-request rejection, human approval, execution, idempotent replay and revocation through the live HTTP gateway. Transport tests cover redirects, invalid origins, malformed/unbound responses, oversized messages and timeouts.
+- The human operator CLI was exercised as a subprocess against a real HTTP gateway: draft, issue, inspect, fingerprint-bound approval, revocation and audit checks passed. Wrong-role credentials, stale/expired reviews, mismatched fingerprints, draft overwrite attempts and credential leakage checks were also covered.
 - The demo exercised all six required scenarios, including the transition from pending approval to one committed simulated effect.
 - Source/document text, package metadata fields and staged filenames were checked for unintended authorship labels and credential artifacts. No such attribution was intentionally added. This is an inspection of the accessible project files, not a claim that all possible metadata or traces are absent.
 

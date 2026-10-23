@@ -26,6 +26,8 @@ flowchart LR
 | `semantic.py` | Optional remote review that cannot relax the baseline |
 | `gateway.py` | Transactions, budgets, approvals, effects and audit |
 | `api.py` | Credential separation, bounded HTTP bodies and operator routes |
+| `operator.py` | Human-only control client and exact-action review workflow |
+| `transport.py` | Shared validation of trusted gateway origins |
 | `mcp_server.py` | Agent-only stdio bridge to the same HTTP enforcement boundary |
 | `evaluation.py` | Labeled regression runner and metrics |
 
@@ -35,7 +37,7 @@ Execution acquires a SQLite `BEGIN IMMEDIATE` transaction. The gateway reads cur
 
 Request IDs are scoped to the authenticated identity and bound to a canonical hash of the complete action, including context. Reusing an ID with different arguments is denied. Completed requests return stored results without another effect. A replayed successful response describes a previous execution, not a fresh authorization grant. Completed denials are also cached; use a new request ID after correcting an action.
 
-Approvals expire at the earlier of five minutes or an ancestor's expiration. Approval alone does not execute anything. On retry, the gateway rechecks all current policy and semantic denial. Edits invalidate outstanding approvals across the affected subtree. Hard denials cannot be approved.
+Approvals expire at the earlier of five minutes or an ancestor's expiration. Approval alone does not execute anything. On retry, the gateway rechecks all current policy and semantic denial. Edits invalidate outstanding approvals across the affected subtree. Hard denials cannot be approved. The operator CLI requires the action fingerprint shown during inspection; the gateway atomically checks it when supplied and records it with the human review. Legacy API clients may omit this additional review check.
 
 ## Delegation
 
