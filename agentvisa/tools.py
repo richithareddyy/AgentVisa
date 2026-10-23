@@ -39,7 +39,7 @@ def prepare(action: Action) -> Prepared:
     result: dict = {}
     if action.tool == "search_products":
         text(args["query"], "query", 300)
-        result = {"products": CATALOG}
+        result = {"products": {key: item for key, item in CATALOG.items() if item["category"] == "monitor"}}
     elif action.tool == "compare_products":
         ids = args["product_ids"]
         if type(ids) is not list or not 1 <= len(ids) <= 5 or any(type(i) is not str or i not in CATALOG for i in ids):

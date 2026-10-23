@@ -159,6 +159,7 @@ class Gateway:
                 self._audit(db, {"event": "idempotent_replay", "agent": principal, "request_id": action.request_id})
                 return response
             chain, policy_checks, intent, prepared = [], [], None, None
+            policy_ms = 0.0
             decision, reason = "DENY", "authorization failed"
             now = int(self.clock())
             approved = bool(previous and previous["approval"] == "approved" and now < previous["deadline"])
@@ -167,9 +168,11 @@ class Gateway:
                 if chain[0][1].agent_id != principal:
                     raise ValueError("visa identity does not match authenticated caller")
                 prepared = prepare(action)
+                policy_start = time.perf_counter()
                 for depth, (row, contract) in enumerate(chain):
                     policy_checks.append({"visa_id": row["id"], "check": "delegation_depth", "passed": depth <= contract.delegation_depth})
                     policy_checks.extend({"visa_id": row["id"], **check} for check in checks(contract, row["status"], row["spent"], row["actions"], action, prepared, now))
+                policy_ms = (time.perf_counter() - policy_start) * 1000
                 failures = [p["check"] for p in policy_checks if not p["passed"]]
                 if failures:
                     reason = "Hard policy violation: " + ", ".join(sorted(set(failures)))
@@ -196,7 +199,7 @@ class Gateway:
                         "reason": reason, "executed": decision == "ALLOW", "policy_checks": policy_checks,
                         "intent": intent.dictionary() if intent else None,
                         "human_intervention": approved, "estimated_impact": prepared.impact if prepared else None,
-                        "cost_cents": prepared.cost if prepared else None}
+                        "cost_cents": prepared.cost if prepared else None, "policy_ms": round(policy_ms, 4)}
             if decision == "ALLOW":
                 effect_id = uuid4().hex
                 result = {"simulation": True, **prepared.result}

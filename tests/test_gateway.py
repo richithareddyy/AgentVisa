@@ -293,3 +293,9 @@ def test_invalid_evaluator_scores_fail_closed(setup, score):
             return Intent(score, .1, "invalid", [], "ALLOW")
     g.evaluator = Invalid()
     assert g.execute("a", action(v))["decision"] == "ASK_HUMAN"
+
+
+def test_search_returns_only_mission_catalog(setup):
+    g, _, v, _ = setup
+    response = g.execute("a", action(v))
+    assert all(p["category"] == "monitor" for p in response["result"]["products"].values())
