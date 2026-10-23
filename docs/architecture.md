@@ -34,7 +34,7 @@ flowchart LR
 
 ## Transactions and retries
 
-Execution acquires a SQLite `BEGIN IMMEDIATE` transaction. The gateway reads current ancestry, interprets arguments, checks policy, evaluates intent, writes the simulated effect, updates all ancestor usage and appends an audit record. Failure rolls back the transaction. Concurrent writers serialize, preventing sibling agents from spending the same remaining budget.
+Execution acquires a SQLite `BEGIN IMMEDIATE` transaction. The gateway reads current ancestry, interprets arguments, checks policy, evaluates intent, writes the simulated effect, updates all ancestor usage and appends an audit record. After intent evaluation, the gateway checks every ancestor’s expiration again before permitting an effect or review. Existing review deadlines are also rechecked; a newly requested review is denied if evaluation consumed its five-minute window. Expired attempts are recorded as completed denials and require a new request ID. Failure rolls back the transaction. Concurrent writers serialize, preventing sibling agents from spending the same remaining budget.
 
 Request IDs are scoped to the authenticated identity and bound to a canonical hash of the complete action, including context. Reusing an ID with different arguments is denied. Completed requests return stored results without another effect. A replayed successful response describes a previous execution, not a fresh authorization grant. Completed denials are also cached; use a new request ID after correcting an action.
 

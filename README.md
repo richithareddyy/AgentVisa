@@ -38,6 +38,7 @@ The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `htt
 - Human-reviewed contracts: exact tools/resources, budgets, transaction limits, expiration, approval thresholds, action counts and delegation depth.
 - Server-derived prices, destinations and impact; caller-supplied cost overrides and unexpected arguments are rejected.
 - Every action checks the entire delegation chain. Child spending consumes every ancestor's allowance, including across siblings.
+- Visa and review expiration are rechecked after intent evaluation so slow evaluation cannot use authority already expired at the final check.
 - Hard policy denials cannot be overridden by human approval or semantic recommendations.
 - Exact-action approvals expire within five minutes, are rechecked before execution and cannot produce duplicate effects. Policy edits invalidate affected outstanding approvals.
 - Durable idempotency, transactional simulated effects, structured decision logging and a locally verifiable audit hash chain.

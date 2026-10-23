@@ -211,6 +211,20 @@ class Gateway:
                         reason = "Exact action requires human approval" if decision == "ASK_HUMAN" else ("Human approval applied after policy recheck" if approved else intent.reason)
             except (ValueError, TypeError, KeyError) as exc:
                 reason = str(exc)
+            deadline = previous["deadline"] if previous else min(now + 300, *(c.expires_at for _, c in chain)) if chain else now
+            # Evaluation can take time while the transaction protects mutable policy state.
+            # Recheck time-dependent authority before granting an effect or a review.
+            if decision in ("ALLOW", "ASK_HUMAN"):
+                final_now = int(self.clock())
+                final_checks = [{"visa_id": row["id"], "check": "unexpired_after_evaluation",
+                                 "passed": final_now < contract.expires_at} for row, contract in chain]
+                policy_checks.extend(final_checks)
+                if any(not check["passed"] for check in final_checks):
+                    decision, reason = "DENY", "Visa expired during intent evaluation"
+                    approved = False
+                elif (previous or decision == "ASK_HUMAN") and final_now >= deadline:
+                    decision, reason = "DENY", "Review deadline elapsed during intent evaluation; submit a new request"
+                    approved = False
             response = {"request_id": action.request_id, "visa_id": action.visa_id, "decision": decision,
                         "reason": reason, "executed": decision == "ALLOW", "policy_checks": policy_checks,
                         "intent": intent.dictionary() if intent else None,
@@ -224,7 +238,6 @@ class Gateway:
                     db.execute("UPDATE visas SET spent=spent+?, actions=actions+1 WHERE id=?", (prepared.cost, row["id"]))
                 response.update({"effect_id": effect_id, "result": result})
             state = "pending" if decision == "ASK_HUMAN" else "completed"
-            deadline = previous["deadline"] if previous else min(now + 300, *(c.expires_at for _, c in chain)) if chain else now
             if decision == "ASK_HUMAN":
                 response["approval_deadline"] = deadline
             response["evaluation_ms"] = round((time.perf_counter() - start) * 1000, 3)

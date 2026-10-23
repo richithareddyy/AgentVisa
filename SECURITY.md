@@ -23,3 +23,5 @@ There are no real payments, MCP Streamable HTTP endpoint, shell tools, arbitrary
 Before connecting real services, add verified workload identity, provider credentials held only by the gateway, egress isolation, versioned adapter schemas, confirmed costs, reservations/reconciliation, authenticated human sessions, tenant boundaries, rate limits, observability and independent adversarial review.
 
 See [audit exports and independently held checkpoints](docs/audit-exports.md) for offline prefix verification and its trust limitations.
+
+Expiration is checked again after intent evaluation, immediately before constructing the final decision and writing a simulated effect. The host wall clock is trusted; this is not a guarantee that the SQLite commit finishes before the expiration instant. Remote review still holds the writer transaction, and this check does not impose a total evaluator timeout.
