@@ -41,6 +41,7 @@ The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `htt
 - Hard policy denials cannot be overridden by human approval or semantic recommendations.
 - Exact-action approvals expire within five minutes, are rechecked before execution and cannot produce duplicate effects. Policy edits invalidate affected outstanding approvals.
 - Durable idempotency, transactional simulated effects, structured decision logging and a locally verifiable audit hash chain.
+- An agent-only MCP stdio bridge forwards actions to the gateway, with exact-response binding, bounded transport and no human-control tools.
 - Optional HTTPS semantic review can tighten the baseline. Uncertainty or service failure requires human review. No remote service is enabled by default.
 
 | Scenario | Result |
@@ -62,7 +63,8 @@ The offline intent baseline combines trusted catalog categories with narrow revi
 
 - [Architecture and transaction semantics](docs/architecture.md)
 - [API walkthrough](docs/api.md)
+- [MCP agent integration](docs/mcp.md)
 - [Optional semantic service protocol](docs/semantic.md)
 - [Security assumptions and production gaps](SECURITY.md)
 
-There is no MCP transport, OAuth issuer, real payment adapter or browser console in this version. The API and operator snapshot provide the control surface. Agents must run outside the trusted gateway process, without direct tool credentials or database access.
+An optional MCP stdio bridge is available with `pip install -e '.[mcp]' -c requirements.lock`. There is no MCP Streamable HTTP endpoint, OAuth issuer, real payment adapter or browser console in this version. The API and operator snapshot provide the control surface. Agents must run outside the trusted gateway process, without direct tool credentials or database access.

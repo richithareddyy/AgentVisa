@@ -151,7 +151,7 @@ class Gateway:
         with self.transaction() as db:
             previous = db.execute("SELECT * FROM requests WHERE principal=? AND id=?", (principal, action.request_id)).fetchone()
             if previous and previous["fingerprint"] != fingerprint:
-                response = {"decision": "DENY", "reason": "request_id is bound to a different action", "executed": False}
+                response = {"request_id": action.request_id, "visa_id": action.visa_id, "decision": "DENY", "reason": "request_id is bound to a different action", "executed": False}
                 self._audit(db, {"event": "replay_conflict", "agent": principal, "action": action.dictionary(), **response})
                 return response
             if previous and previous["approval"] == "completed":

@@ -26,6 +26,7 @@ flowchart LR
 | `semantic.py` | Optional remote review that cannot relax the baseline |
 | `gateway.py` | Transactions, budgets, approvals, effects and audit |
 | `api.py` | Credential separation, bounded HTTP bodies and operator routes |
+| `mcp_server.py` | Agent-only stdio bridge to the same HTTP enforcement boundary |
 | `evaluation.py` | Labeled regression runner and metrics |
 
 ## Transactions and retries
