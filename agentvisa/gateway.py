@@ -12,6 +12,7 @@ from .intent import Evaluator, Intent, ProcurementEvaluator
 from .models import Action, Contract
 from .policy import attenuation, checks
 from .tools import prepare
+from .storage import private_database
 
 logger = logging.getLogger("agentvisa.decisions")
 
@@ -23,6 +24,7 @@ def encode(value) -> str:
 class Gateway:
     def __init__(self, path: str, evaluator: Evaluator | None = None, clock: Callable = time.time):
         self.path, self.evaluator, self.clock = path, evaluator or ProcurementEvaluator(), clock
+        private_database(self.path, create=True)
         with self.transaction() as db:
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS visas (
@@ -44,6 +46,7 @@ class Gateway:
 
     @contextmanager
     def transaction(self):
+        private_database(self.path)
         db = sqlite3.connect(self.path, timeout=15, isolation_level=None)
         db.row_factory = sqlite3.Row
         db.execute("PRAGMA foreign_keys=ON")
@@ -60,6 +63,7 @@ class Gateway:
     @contextmanager
     def read_transaction(self):
         """Consistent read snapshot without reserving the SQLite writer lock."""
+        private_database(self.path)
         db = sqlite3.connect(self.path, timeout=15, isolation_level=None)
         db.row_factory = sqlite3.Row
         try:

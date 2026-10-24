@@ -16,7 +16,7 @@ This is a working prototype with **simulated tool effects**, durable state, an a
 
 ## Run locally
 
-Requires Python 3.11 or newer. From this repository:
+Requires Python 3.11 or newer on a POSIX host (such as macOS or Linux) with `O_NOFOLLOW` support. From this repository:
 
 ```sh
 python3 -m venv .venv
@@ -29,7 +29,7 @@ python -m agentvisa init
 python -m agentvisa serve
 ```
 
-Initialization creates `.agentvisa.local.json` with random, separate administrator and agent credentials and owner-only permissions. It refuses to overwrite an existing file. Credentials and databases are ignored by Git. Keep the config private; an agent receives only its own token.
+Initialization creates `.agentvisa.local.json` with random, separate administrator and agent credentials and owner-only permissions. It refuses to overwrite an existing file. Credentials and databases are ignored by Git. Database files are created with owner-only permissions; existing unsafe files are rejected. See [private storage requirements](docs/storage.md) before reusing an older database. Keep the config private; an agent receives only its own token.
 
 The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `http://127.0.0.1:8000/docs`. The configured agent is `procurement`. Use the [operator CLI](docs/operator.md) to draft and issue visas, inspect exact pending actions, approve or reject requests, revoke authority and review audits. The [API walkthrough](docs/api.md) documents direct calls.
 

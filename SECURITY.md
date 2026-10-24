@@ -16,7 +16,7 @@ Static bearer credentials are for local development. There is no OAuth/OIDC, ten
 
 An explicitly configured semantic service receives mission/action/context. Use an approved service and consider retention and leakage. HTTPS redirects are refused and response size is bounded. Timeout is per network operation, not a total deadline; slow calls can hold the database writer lock.
 
-Audit data contains arguments/context and is not encrypted at the application layer. Protect file permissions, host storage and backups. A privileged attacker can rewrite or truncate the local hash chain; it is not an externally anchored ledger.
+Audit data contains arguments/context and is not encrypted at the application layer. The gateway creates database files with mode 0600 and checks POSIX ownership, permissions, file type and link count before each connection, including existing SQLite journal/WAL sidecars. Protect host storage and backups. A privileged attacker can rewrite or truncate the local hash chain; it is not an externally anchored ledger.
 
 There are no real payments, MCP Streamable HTTP endpoint, shell tools, arbitrary tool URLs, filesystem adapters or general-purpose agents. The optional MCP stdio bridge uses an agent-only credential to call the HTTP gateway; it does not add an authorization bypass or an OS sandbox. Regression tests cannot prove containment for tools that do not exist.
 
@@ -25,3 +25,5 @@ Before connecting real services, add verified workload identity, provider creden
 See [audit exports and independently held checkpoints](docs/audit-exports.md) for offline prefix verification and its trust limitations.
 
 Expiration is checked again after intent evaluation, immediately before constructing the final decision and writing a simulated effect. The host wall clock is trusted; this is not a guarantee that the SQLite commit finishes before the expiration instant. Remote review still holds the writer transaction, and this check does not impose a total evaluator timeout.
+
+Database enforcement currently requires POSIX `O_NOFOLLOW`; native Windows is unsupported. Keep the database directory and its ancestors under trusted operator control. Checks and SQLite opens are separate operations, so this is not protection against an attacker who can replace directory entries between them. Extended ACLs, privileged users and backup permissions are outside these mode-bit checks. See [storage requirements](docs/storage.md).

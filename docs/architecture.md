@@ -26,6 +26,7 @@ flowchart LR
 | `semantic.py` | Optional remote review that cannot relax the baseline |
 | `gateway.py` | Transactions, budgets, approvals, effects and audit |
 | `api.py` | Credential separation, bounded HTTP bodies and operator routes |
+| `storage.py` | Private POSIX database creation and preconnection file checks |
 | `queries.py` | Bounded keyset reads, filters and exact approval inspection |
 | `operator.py` | Human-only control client and exact-action review workflow |
 | `transport.py` | Shared validation of trusted gateway origins |
