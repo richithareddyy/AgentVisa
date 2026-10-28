@@ -27,3 +27,5 @@ See [audit exports and independently held checkpoints](docs/audit-exports.md) fo
 Expiration is checked again after intent evaluation, immediately before constructing the final decision and writing a simulated effect. The host wall clock is trusted; this is not a guarantee that the SQLite commit finishes before the expiration instant. Remote review still holds the writer transaction, and this check does not impose a total evaluator timeout.
 
 Database enforcement currently requires POSIX `O_NOFOLLOW`; native Windows is unsupported. Keep the database directory and its ancestors under trusted operator control. Checks and SQLite opens are separate operations, so this is not protection against an attacker who can replace directory entries between them. Extended ACLs, privileged users and backup permissions are outside these mode-bit checks. See [storage requirements](docs/storage.md).
+
+HTTP request bodies must finish within five seconds of entering the body middleware. This limits slow body reads but is not a general denial-of-service defense: header handling, connection limits, rate limiting and total execution deadlines still require separate controls.

@@ -1,4 +1,7 @@
 """Authenticated HTTP boundary. Protected adapters are never exposed as routes."""
+import asyncio
+import math
+from time import monotonic
 import hmac
 import json
 import os
@@ -41,25 +44,37 @@ class ActionBody(StrictModel):
 
 class BodyLimit:
     """Buffer a bounded body before parsing; also covers chunked requests."""
-    def __init__(self, app, limit=65536):
-        self.app, self.limit = app, limit
+    def __init__(self, app, limit=65536, read_timeout=5.0):
+        if type(read_timeout) not in (int, float) or not math.isfinite(read_timeout) or read_timeout <= 0:
+            raise ValueError("body read timeout must be positive and finite")
+        self.app, self.limit, self.read_timeout = app, limit, read_timeout
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
-        chunks, size = [], 0
-        while True:
-            message = await receive()
-            if message["type"] == "http.disconnect":
-                return
-            size += len(message.get("body", b""))
-            if size > self.limit:
-                response = JSONResponse({"detail": "request body too large"}, status_code=413)
-                return await response(scope, receive, send)
-            chunks.append(message.get("body", b""))
-            if not message.get("more_body", False):
-                break
-        body = b"".join(chunks)
+        body = bytearray()
+        deadline = monotonic() + self.read_timeout
+        try:
+            while True:
+                remaining = deadline - monotonic()
+                if remaining <= 0:
+                    raise TimeoutError
+                message = await asyncio.wait_for(receive(), timeout=remaining)
+                if message["type"] == "http.disconnect":
+                    return
+                if monotonic() >= deadline:
+                    raise TimeoutError
+                chunk = message.get("body", b"")
+                if len(body) + len(chunk) > self.limit:
+                    response = JSONResponse({"detail": "request body too large"}, status_code=413)
+                    return await response(scope, receive, send)
+                body.extend(chunk)
+                if not message.get("more_body", False):
+                    break
+        except TimeoutError:
+            response = JSONResponse({"detail": "request body read deadline exceeded"}, status_code=408)
+            return await response(scope, receive, send)
+        body = bytes(body)
         if body:
             content_types = [value.decode("latin-1").split(";", 1)[0].strip().lower()
                              for key, value in scope.get("headers", []) if key.lower() == b"content-type"]

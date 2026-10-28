@@ -36,6 +36,7 @@ The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `htt
 ## Implemented behavior
 
 - Human-reviewed contracts: exact tools/resources, budgets, transaction limits, expiration, approval thresholds, action counts and delegation depth.
+- HTTP body reads have a five-second total deadline, including chunked uploads.
 - HTTP requests reject duplicate JSON fields, nonfinite numbers, invalid Unicode and excessive nesting before authorization.
 - Server-derived prices, destinations and impact; caller-supplied cost overrides and unexpected arguments are rejected.
 - Every action checks the entire delegation chain. Child spending consumes every ancestor's allowance, including across siblings.
