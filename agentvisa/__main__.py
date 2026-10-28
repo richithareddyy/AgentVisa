@@ -11,7 +11,7 @@ def main():
     parser.add_argument("command", choices=["init", "serve", "demo", "evaluate"])
     parser.add_argument("--config", default=".agentvisa.local.json")
     parser.add_argument("--port", type=int, default=8000)
-    parser.add_argument("--dataset", default="evaluation/cases.json")
+    parser.add_argument("--dataset", help="Custom evaluation JSON; defaults to the bundled regression dataset")
     parser.add_argument("--output")
     args = parser.parse_args()
     if args.command == "init":

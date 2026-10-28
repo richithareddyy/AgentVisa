@@ -21,3 +21,5 @@ The reference run uses the offline baseline. Requests rejected before the policy
 The fixtures were developed alongside the implementation. They are not independently labeled, representative or held out. Zero observed false allows is not an estimate of an attacker's success probability. Injection tests exercise attempted effects, not a live compromised model. Unit/integration tests separately cover races, replay, persistence and audit failure.
 
 Broader evaluation needs independently authored held-out missions, paraphrases, multilingual actions, multi-step traces, new adapters, realistic human reviews and calibrated model evaluation. Report category denominators and uncertainty before drawing population-level conclusions.
+
+The default dataset is packaged at `agentvisa/data/cases.json` and loaded through package resources. Evaluation no longer depends on the current working directory. Use `python -m agentvisa evaluate --dataset /absolute/path/to/custom.json` for an explicit custom dataset.

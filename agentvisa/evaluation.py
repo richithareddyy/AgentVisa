@@ -2,6 +2,7 @@
 from collections import Counter
 from dataclasses import replace
 import json
+from importlib.resources import files
 from pathlib import Path
 import platform
 import statistics
@@ -16,8 +17,9 @@ def percentile(values, proportion):
     return values[min(len(values) - 1, int((len(values) - 1) * proportion))] if values else 0
 
 
-def run(dataset: str) -> dict:
-    cases = json.loads(Path(dataset).read_text())
+def run(dataset: str | None = None) -> dict:
+    source = Path(dataset) if dataset is not None else files("agentvisa").joinpath("data/cases.json")
+    cases = json.loads(source.read_text(encoding="utf-8"))
     records, latency, policy_latency = [], [], []
     for case in cases:
         with tempfile.TemporaryDirectory() as directory:
@@ -54,7 +56,7 @@ def run(dataset: str) -> dict:
     escalation = [r for r in records if r["category"] == "delegation_escalation"]
     ratio = lambda rows, predicate: sum(predicate(r) for r in rows) / len(rows) if rows else None
     return {
-        "dataset": Path(dataset).name, "case_count": len(records), "python": platform.python_version(),
+        "dataset": source.name, "case_count": len(records), "python": platform.python_version(),
         "evaluator": "ProcurementEvaluator; offline heuristic baseline",
         "scope": "curated regression fixtures; not a production safety estimate or held-out model benchmark",
         "dangerous_case_count": len(dangerous),

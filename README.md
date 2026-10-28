@@ -62,7 +62,7 @@ The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `htt
 
 ## Validation and scope
 
-Tests cover HTTP authorization separation, input manipulation, approval replay, budget races, delegation escalation, revocation, persistence, evaluator failure and transactional rollback. The [42-case dataset](evaluation/cases.json) includes legitimate, ambiguous, malicious and drifting actions. The [reference results](evaluation/results.json) record zero automatic allows among 33 cases labeled dangerous or review-required. These curated regression results are not a production false-allow estimate or held-out benchmark. See [metric definitions and limitations](docs/evaluation.md).
+Tests cover HTTP authorization separation, input manipulation, approval replay, budget races, delegation escalation, revocation, persistence, evaluator failure and transactional rollback. The [42-case dataset](agentvisa/data/cases.json) includes legitimate, ambiguous, malicious and drifting actions. The [reference results](evaluation/results.json) record zero automatic allows among 33 cases labeled dangerous or review-required. These curated regression results are not a production false-allow estimate or held-out benchmark. See [metric definitions and limitations](docs/evaluation.md).
 
 The focused stack is Python, FastAPI, SQLite and a small custom policy engine. SQLite transactions make shared budgets and simulated effects inspectable on one host. A separate policy service, Redis and a frontend framework are unnecessary for this scope.
 
@@ -81,3 +81,14 @@ An optional MCP stdio bridge is available with `pip install -e '.[mcp]' -c requi
 See [audit exports and independently held checkpoints](docs/audit-exports.md) for offline prefix verification and its trust limitations.
 
 The [agent example](examples/agent_client.py) requires an explicit request ID and supports read-only status recovery; see the [API walkthrough](docs/api.md) for commands.
+
+## Build and verify the package
+
+```sh
+python -m pip wheel . --no-deps --wheel-dir dist
+python scripts/check_wheel.py dist/agentvisa-0.1.0-py3-none-any.whl
+```
+
+The wheel includes the curated evaluation dataset. `python -m agentvisa evaluate` uses that bundled resource from any working directory; `--dataset /path/to/custom.json` selects an explicit alternative. The canonical dataset is now `agentvisa/data/cases.json`; update scripts that used the former `evaluation/cases.json` path.
+
+The package check installs the wheel into a temporary clean environment without dependencies, runs the standard-library-only demo and evaluation outside the checkout, and removes the temporary environment afterward. API/MCP dependencies still need normal installation for those features. CI performs this package check in addition to the full test suite.

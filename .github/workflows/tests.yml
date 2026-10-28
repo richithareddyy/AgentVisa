@@ -19,3 +19,5 @@ jobs:
       - run: python -m pytest -q
       - run: python -m agentvisa evaluate
       - run: python -m agentvisa demo
+      - run: python -m pip wheel . --no-deps --wheel-dir dist
+      - run: python scripts/check_wheel.py dist/agentvisa-0.1.0-py3-none-any.whl
