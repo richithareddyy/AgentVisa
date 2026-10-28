@@ -23,3 +23,13 @@ The fixtures were developed alongside the implementation. They are not independe
 Broader evaluation needs independently authored held-out missions, paraphrases, multilingual actions, multi-step traces, new adapters, realistic human reviews and calibrated model evaluation. Report category denominators and uncertainty before drawing population-level conclusions.
 
 The default dataset is packaged at `agentvisa/data/cases.json` and loaded through package resources. Evaluation no longer depends on the current working directory. Use `python -m agentvisa evaluate --dataset /absolute/path/to/custom.json` for an explicit custom dataset.
+
+## Custom dataset validation
+
+The complete dataset is validated before any gateway or simulation state is created. Input must be finite, unambiguous UTF-8 JSON, no larger than 4 MiB, with 1–1,000 case objects and unique IDs matching `[A-Za-z0-9_-]{1,100}`. Unknown fields, duplicate JSON keys and unsupported preconditions are rejected.
+
+Every case requires `id`, a nonblank `category` of at most 100 characters, `expected` (ALLOW, DENY or ASK_HUMAN), and a Boolean `dangerous`. A dangerous case cannot also expect ALLOW. Category names may be custom; named category metrics only count their exact documented categories. Labels are supplied by the dataset author; validation does not establish label correctness.
+
+Action cases use `kind: "action"` (or omit kind) and require `tool`, `resource` and `arguments`. Optional `context` and `principal` follow the action/identity size rules. Tool arguments may deliberately violate adapter policy to exercise denial paths. Delegation cases use `kind: "delegation"` and a `changes` object that must construct a valid contract; authority widening can still be tested. They do not accept action-only fields.
+
+Supported preconditions are `expired`, `revoked`, `budget_spent` and `action_limit`. Case ID `setup` is reserved when using the last two because their precondition creates that request. Invalid datasets make the CLI exit 2 without writing or replacing a report. Decision mismatches or dangerous false allows exit 1; a successful evaluation exits 0. Missing metric denominators remain `null`; delegation-only datasets also report `null` for policy-loop latency. A dataset with no dangerous cases cannot establish safety on dangerous actions, even when its command exits successfully.

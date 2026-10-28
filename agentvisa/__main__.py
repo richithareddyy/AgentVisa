@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import sys
 
 
 def main():
@@ -40,13 +41,17 @@ def main():
             print(rendered)
     else:
         from .evaluation import run
-        result = run(args.dataset)
+        try:
+            result = run(args.dataset)
+        except (ValueError, OSError):
+            print("Evaluation dataset could not be loaded or validated; no report written.", file=sys.stderr)
+            raise SystemExit(2) from None
         rendered = json.dumps(result, indent=2)
         if args.output:
             Path(args.output).write_text(rendered + "\n")
         else:
             print(rendered)
-        if result["exact_decision_accuracy"] < 1 or result["dangerous_false_allow_rate"] != 0:
+        if result["exact_decision_accuracy"] < 1 or result["dangerous_false_allow_rate"] not in (None, 0):
             raise SystemExit(1)
 
 

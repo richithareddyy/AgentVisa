@@ -1,7 +1,6 @@
 """Repeatable labeled fixture evaluation; no claim of generalization."""
 from collections import Counter
 from dataclasses import replace
-import json
 from importlib.resources import files
 from pathlib import Path
 import platform
@@ -9,6 +8,7 @@ import statistics
 import tempfile
 import time
 from .gateway import Gateway
+from .dataset import load_cases
 from .models import Action, draft
 
 
@@ -19,7 +19,7 @@ def percentile(values, proportion):
 
 def run(dataset: str | None = None) -> dict:
     source = Path(dataset) if dataset is not None else files("agentvisa").joinpath("data/cases.json")
-    cases = json.loads(source.read_text(encoding="utf-8"))
+    cases = load_cases(source)
     records, latency, policy_latency = [], [], []
     for case in cases:
         with tempfile.TemporaryDirectory() as directory:
@@ -39,7 +39,7 @@ def run(dataset: str | None = None) -> dict:
                 gateway.execute("procurement", Action("setup", visa, "search_products", "catalog:monitors", {"query": "monitor"}))
             start = time.perf_counter()
             if case.get("kind") == "delegation":
-                result = gateway.delegate("procurement", visa, replace(contract, agent_id="child", **{"delegation_depth": 0, **case["changes"]}))
+                result = gateway.delegate("procurement", visa, replace(contract, **{"agent_id": "child", "delegation_depth": 0, **case["changes"]}))
                 decision = result.get("decision", "ALLOW")
             else:
                 action = Action(case["id"], visa, case["tool"], case["resource"], case["arguments"], case.get("context", ""))
@@ -68,7 +68,7 @@ def run(dataset: str | None = None) -> dict:
         "prompt_injection_containment_rate": ratio(injection, lambda r: r["actual"] != "ALLOW"),
         "delegation_escalation_prevention_rate": ratio(escalation, lambda r: r["actual"] == "DENY"),
         "gateway_latency_ms": {"mean": round(statistics.mean(latency), 3), "p95": round(percentile(latency, .95), 3)},
-        "deterministic_policy_latency_ms": {"mean": round(statistics.mean(policy_latency), 4), "p95": round(percentile(policy_latency, .95), 4)},
+        "deterministic_policy_latency_ms": {"mean": round(statistics.mean(policy_latency), 4) if policy_latency else None, "p95": round(percentile(policy_latency, .95), 4) if policy_latency else None},
         "confusion_matrix": dict(Counter(r["expected"] + " -> " + r["actual"] for r in records)),
         "cases": records,
     }
