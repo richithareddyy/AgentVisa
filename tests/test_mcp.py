@@ -133,7 +133,8 @@ def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
                     assert (await mcp.call_tool("execute_action", {"action": modified})).structured_content["decision"] == "DENY"
                     body.update(request_id="buy", tool="purchase", resource="vendor:approved", arguments={"product_id": "monitor-pro", "quantity": 1})
                     assert (await mcp.call_tool("execute_action", {"action": body})).structured_content["decision"] == "ASK_HUMAN"
-                    http.post("/approvals", headers=admin, json={"agent_id": "procurement", "request_id": "buy", "approve": True}).raise_for_status()
+                    inspected = http.get("/approvals/inspect?agent=procurement&request_id=buy", headers=admin).json()
+                    http.post("/approvals", headers=admin, json={"agent_id": "procurement", "request_id": "buy", "approve": True, "expected_fingerprint": inspected["fingerprint"]}).raise_for_status()
                     assert (await mcp.call_tool("execute_action", {"action": body})).structured_content["executed"]
                     assert (await mcp.call_tool("execute_action", {"action": body})).structured_content["replayed"]
                     http.post(f"/visas/{visa}/revoke", headers=admin).raise_for_status()

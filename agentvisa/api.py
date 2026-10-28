@@ -30,7 +30,7 @@ class Review(StrictModel):
     agent_id: str
     request_id: str
     approve: bool
-    expected_fingerprint: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    expected_fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
 class ActionBody(StrictModel):

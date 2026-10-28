@@ -35,10 +35,10 @@ Use administrator-only GET `/visas`, `/approvals` and `/audit/events` for bounde
 POST `/approvals` as administrator:
 
 ```json
-{"agent_id":"procurement","request_id":"monitor-purchase-1","approve":true,"expected_fingerprint":"replace-with-64-character-fingerprint-from-control"}
+{"agent_id":"procurement","request_id":"monitor-purchase-1","approve":true,"expected_fingerprint":"replace-with-64-character-fingerprint-from-inspect"}
 ```
 
-The optional `expected_fingerprint` is checked against the stored action; the operator CLI always requires it. Omit the field only for legacy clients that do not implement this review check. Use false to reject. The agent retries the identical action after approval. Policy is rechecked, and subsequent successful retries return the stored result with `replayed: true`.
+The required `expected_fingerprint` must match the exact action returned by `/approvals/inspect`. Both approvals and rejections require it. Missing, null, malformed or mismatched fingerprints return 422 without changing review state. Legacy clients that omitted this field must be updated; the operator CLI already supplies it. Use false to reject. The agent retries the identical action after approval. Policy is rechecked, and subsequent successful retries return the stored result with `replayed: true`.
 
 PUT the complete replacement contract to `/visas/{visa_id}` as administrator to edit policy. Mission and identity are immutable; changes require a new visa. Edits invalidate affected approvals. POST `/visas/{visa_id}/revoke` prevents new effects under the visa and descendants.
 

@@ -3,7 +3,7 @@
 Verified locally on October 27, 2026 using Python 3.14.7 and the dependency versions in `requirements.lock`.
 
 - Editable package installation succeeded with the documented constraints.
-- 240 unit/integration tests passed with the MCP extra installed, including concurrent sibling budgets and request idempotency, ancestor revocation/depth changes, approval mutation/expiry, malformed semantic scores, private credential initialization and audit-write rollback.
+- 257 unit/integration tests passed with the MCP extra installed, including concurrent sibling budgets and request idempotency, ancestor revocation/depth changes, approval mutation/expiry, malformed semantic scores, private credential initialization and audit-write rollback.
 - The 42-case evaluation matched every expected decision, with zero automatic allows among 33 dangerous or review-required cases. See the evaluation methodology for the narrow scope of this result.
 - A real loopback HTTP server passed issuance, human approval, execution, retry, revocation and audit-integrity checks. Temporary credentials and state were removed after the check.
 - A real MCP SDK client launched the stdio bridge and verified tool discovery, search, mutated-request rejection, human approval, execution, idempotent replay and revocation through the live HTTP gateway. Transport tests cover redirects, invalid origins, malformed/unbound responses, oversized messages and timeouts.
@@ -15,6 +15,7 @@ Verified locally on October 27, 2026 using Python 3.14.7 and the dependency vers
 - Storage tests cover permissive umask creation, unsafe mode rejection without mutation, symbolic/hard links, directories/FIFOs, sidecar permissions, wrong ownership, deleted databases, sanitized HTTP failure, rechecks after permission changes, and SQLite journal permissions.
 - HTTP JSON boundary tests cover duplicate and escaped-equivalent keys, nonfinite and overflowing numbers, invalid UTF-8 and lone surrogates, nesting limits, media types, chunked duplicate fields, valid Unicode and absence of state changes on rejection.
 - Body deadline tests cover stalled reads and cancellation cleanup, a shared deadline across chunks, disconnects, outer cancellation, invalid timeout settings, non-HTTP passthrough and route execution beyond the body-read deadline.
+- HTTP human-review tests cover required fingerprints for approve/reject, malformed and cross-action hashes, unchanged state on failure, one-time review application and audit fingerprint recording. The real HTTP/MCP flow inspects before approving.
 - The demo exercised all six required scenarios, including the transition from pending approval to one committed simulated effect.
 - Source/document text, package metadata fields and staged filenames were checked for unintended authorship labels and credential artifacts. No such attribution was intentionally added. This is an inspection of the accessible project files, not a claim that all possible metadata or traces are absent.
 

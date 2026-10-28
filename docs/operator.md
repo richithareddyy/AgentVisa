@@ -74,6 +74,6 @@ Limits range from 1 to 100. Lists return one oldest-first page plus `has_more`, 
 
 Commands exit nonzero on invalid input, stale reviews, authentication errors or transport failure. Error output does not echo bearer tokens or upstream response bodies. Redirects and ambient proxies are disabled; HTTP is restricted to literal loopback addresses. No command automatically retries a mutation. A response lost after issuing a visa or changing policy can leave an unknown outcome: inspect current state before repeating it. Issuance itself does not have an idempotency key.
 
-This is a single-administrator development control plane, not a multi-user identity system. The fingerprint requirement is enforced by the CLI and checked by the API when supplied. Older API clients may omit it for compatibility; their approvals still bind the immutable stored request, but they do not prove an explicit inspect-and-copy workflow.
+This is a single-administrator development control plane, not a multi-user identity system. The fingerprint requirement is enforced by both the CLI and HTTP API for approvals and rejections. Older HTTP clients must inspect the exact outstanding request and submit its fingerprint. This binds the review to an action; it does not prove that a human read or understood it.
 
 See [audit exports and independently held checkpoints](audit-exports.md) for offline prefix verification and its trust limitations.

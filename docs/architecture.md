@@ -40,7 +40,7 @@ Execution acquires a SQLite `BEGIN IMMEDIATE` transaction. The gateway reads cur
 
 Request IDs are scoped to the authenticated identity and bound to a canonical hash of the complete action, including context. Reusing an ID with different arguments is denied. Completed requests return stored results without another effect. A replayed successful response describes a previous execution, not a fresh authorization grant. Completed denials are also cached; use a new request ID after correcting an action.
 
-Approvals expire at the earlier of five minutes or an ancestor's expiration. Approval alone does not execute anything. On retry, the gateway rechecks all current policy and semantic denial. Edits invalidate outstanding approvals across the affected subtree. Hard denials cannot be approved. The operator CLI requires the action fingerprint shown during inspection; the gateway atomically checks it when supplied and records it with the human review. Legacy API clients may omit this additional review check.
+Approvals expire at the earlier of five minutes or an ancestor's expiration. Approval alone does not execute anything. On retry, the gateway rechecks all current policy and semantic denial. Edits invalidate outstanding approvals across the affected subtree. Hard denials cannot be approved. The operator CLI and HTTP API require the action fingerprint shown during inspection for both approval and rejection. The gateway atomically compares it with the stored request and records it with the review. Direct Python calls remain trusted internal interfaces and retain the optional argument for local demos and tests; they are not an authenticated security boundary.
 
 ## Delegation
 
