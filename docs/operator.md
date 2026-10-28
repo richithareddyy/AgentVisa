@@ -77,3 +77,13 @@ Commands exit nonzero on invalid input, stale reviews, authentication errors or 
 This is a single-administrator development control plane, not a multi-user identity system. The fingerprint requirement is enforced by both the CLI and HTTP API for approvals and rejections. Older HTTP clients must inspect the exact outstanding request and submit its fingerprint. This binds the review to an action; it does not prove that a human read or understood it.
 
 See [audit exports and independently held checkpoints](audit-exports.md) for offline prefix verification and its trust limitations.
+
+## Inspect inherited authority
+
+```sh
+python -m agentvisa.operator --config .agentvisa.local.json inspect-visa --visa VISA_ID
+```
+
+This reads one visa and its ancestors in a consistent database snapshot, ordered from leaf to root. Each node includes its contract, status, usage, remaining budget/actions and expiration. `effective_limits` takes the smallest remaining allowance, transaction cap, approval threshold and expiration across the chain. Tool/resource sets intersect all allowed sets and remove every ancestor’s forbidden entries. Usage above a newly reduced cap is displayed as zero remaining, never a negative allowance.
+
+`blockers` identifies inactive or expired ancestors, exceeded delegation depth and exhausted action counts. It is not an exhaustive explanation for a proposed action. Zero remaining budget can still permit a zero-cost action; transaction, tool, resource and intent checks still apply. The snapshot grants no authority and reserves nothing. Parent or sibling activity can consume the displayed allowance immediately after the read; pending reviews do not reserve budget. All actual execution continues through the gateway.

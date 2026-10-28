@@ -66,6 +66,44 @@ class ReadModel:
             rows = db.execute(sql + " ORDER BY rowid LIMIT ?", [*values, limit + 1]).fetchall()
             return self.page(rows, limit, high, lambda r: {**dict(r), "contract": json.loads(r["contract"])})
 
+    def inspect_visa(self, visa_id):
+        with self.gateway.read_transaction() as db:
+            if db.execute("SELECT 1 FROM visas WHERE id=?", (visa_id,)).fetchone() is None:
+                raise LookupError("visa not found")
+            chain = self.gateway._chain(db, visa_id)
+            now = int(self.gateway.clock())
+            nodes, blockers = [], []
+            for depth, (row, contract) in enumerate(chain):
+                node = {**dict(row), "contract": contract.dictionary(), "depth_from_leaf": depth,
+                        "remaining_budget_cents": max(0, contract.spending_limit - row["spent"]),
+                        "remaining_actions": max(0, contract.max_actions - row["actions"]),
+                        "expired": now >= contract.expires_at}
+                nodes.append(node)
+                for failed, reason in ((row["status"] != "active", "inactive"),
+                                       (node["expired"], "expired"),
+                                       (depth > contract.delegation_depth, "delegation_depth"),
+                                       (node["remaining_actions"] == 0, "action_limit")):
+                    if failed:
+                        blockers.append({"visa_id": row["id"], "reason": reason})
+            contracts = [contract for _, contract in chain]
+            def permitted(allowed, forbidden):
+                common = set(getattr(contracts[0], allowed))
+                excluded = set()
+                for contract in contracts:
+                    common.intersection_update(getattr(contract, allowed))
+                    excluded.update(getattr(contract, forbidden))
+                return sorted(common - excluded)
+            return {"visa_id": visa_id, "server_time": now, "chain": nodes, "blockers": blockers,
+                    "effective_limits": {
+                        "remaining_budget_cents": min(node["remaining_budget_cents"] for node in nodes),
+                        "remaining_actions": min(node["remaining_actions"] for node in nodes),
+                        "maximum_transaction_cents": min(c.maximum_transaction for c in contracts),
+                        "approval_threshold_cents": min(c.approval_threshold for c in contracts),
+                        "expires_at": min(c.expires_at for c in contracts),
+                        "allowed_tools": permitted("allowed_tools", "forbidden_operations"),
+                        "allowed_resources": permitted("allowed_resources", "forbidden_resources")},
+                    "scope": "read-only snapshot, not authorization; shared usage can change and pending reviews reserve no budget"}
+
     @staticmethod
     def review(row, now):
         action, response, contract = (json.loads(row[key]) for key in ("action", "response", "contract"))

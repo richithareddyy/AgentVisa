@@ -45,6 +45,7 @@ The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `htt
 - HTTP approvals and rejections require the inspected action fingerprint; missing or mismatched fingerprints cannot change review state.
 - Exact-action approvals expire within five minutes, are rechecked before execution and cannot produce duplicate effects. Policy edits invalidate affected outstanding approvals.
 - Durable idempotency, transactional simulated effects, structured decision logging and a locally verifiable audit hash chain.
+- Visa inspection shows the complete ancestor chain, inherited restrictions and remaining shared allowances in a read-only snapshot.
 - A human operator CLI supports reviewed contract files, fingerprint-bound approvals, revocation, delegation inspection and bounded audit/review pages with exact filters.
 - An agent-only MCP stdio bridge forwards actions to the gateway, with exact-response binding, bounded transport and no human-control tools.
 - Optional HTTPS semantic review can tighten the baseline. Uncertainty, malformed evaluator results or service failure requires human review. No remote service is enabled by default.

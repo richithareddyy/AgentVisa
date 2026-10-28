@@ -77,6 +77,8 @@ def parser():
         page_arguments(listing)
         if name == "approvals":
             listing.add_argument("--include-expired", action="store_true")
+    inspect_visa = commands.add_parser("inspect-visa")
+    inspect_visa.add_argument("--visa", required=True)
     commands.add_parser("integrity")
     checkpoint_cmd = commands.add_parser("checkpoint")
     checkpoint_cmd.add_argument("--output", required=True)
@@ -124,6 +126,8 @@ def run(args, client: ControlClient):
         contract = Contract(**json.loads(path.read_text())).dictionary()
         return client.request("POST" if command == "issue" else "PUT",
                               "/visas" if command == "issue" else "/visas/" + quote(args.visa, safe=""), contract)
+    if command == "inspect-visa":
+        return client.request("GET", "/visas/inspect?" + urlencode({"visa_id": args.visa}))
     if command == "revoke":
         return client.request("POST", "/visas/" + quote(args.visa, safe="") + "/revoke")
     if command == "integrity":

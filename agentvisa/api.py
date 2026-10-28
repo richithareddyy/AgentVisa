@@ -175,6 +175,13 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
                      decision: Literal["ALLOW", "DENY", "ASK_HUMAN"] | None = None, blocked: bool = False):
         return reads.audit(after, limit, through, agent, visa, decision, blocked)
 
+    @app.get("/visas/inspect", dependencies=[Depends(admin)])
+    def inspect_visa(visa_id: str = Query(..., min_length=1, max_length=150)):
+        try:
+            return reads.inspect_visa(visa_id)
+        except LookupError:
+            raise HTTPException(404, "visa not found") from None
+
     @app.get("/visas", dependencies=[Depends(admin)])
     def list_visas(after: int = Query(0, ge=0, le=MAX_CURSOR), limit: int = Query(25, ge=1, le=100),
                    through: int | None = Query(None, ge=0, le=MAX_CURSOR), agent: str | None = Query(None, max_length=100)):
