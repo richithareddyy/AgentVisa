@@ -160,6 +160,15 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
     def execute(body: ActionBody, principal: str = Depends(agent)):
         return gateway.execute(principal, Action(**body.model_dump()))
 
+    @app.get("/requests/status")
+    def request_status(request_id: str = Query(..., pattern=r"^[A-Za-z0-9_-]{1,100}$"),
+                       principal: str = Depends(agent)):
+        try:
+            result = reads.request_status(principal, request_id)
+        except LookupError:
+            return JSONResponse({"detail": "request not found"}, status_code=404, headers={"Cache-Control": "no-store"})
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
     @app.post("/approvals", dependencies=[Depends(admin)])
     def approval(body: Review):
         return gateway.approve(body.agent_id, body.request_id, body.approve, body.expected_fingerprint)

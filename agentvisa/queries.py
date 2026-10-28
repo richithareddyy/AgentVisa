@@ -66,6 +66,20 @@ class ReadModel:
             rows = db.execute(sql + " ORDER BY rowid LIMIT ?", [*values, limit + 1]).fetchall()
             return self.page(rows, limit, high, lambda r: {**dict(r), "contract": json.loads(r["contract"])})
 
+    def request_status(self, principal, request_id):
+        with self.gateway.read_transaction() as db:
+            row = db.execute("SELECT fingerprint,response,approval,deadline FROM requests WHERE principal=? AND id=?",
+                             (principal, request_id)).fetchone()
+            if row is None:
+                raise LookupError("request not found")
+            now = int(self.gateway.clock())
+            outstanding = row["approval"] in ("pending", "approved")
+            return {"request_id": request_id, "fingerprint": row["fingerprint"],
+                    "state": row["approval"], "last_response": json.loads(row["response"]),
+                    "review_deadline": row["deadline"] if outstanding else None,
+                    "review_expired": outstanding and now >= row["deadline"], "server_time": now,
+                    "scope": "stored request snapshot; not a new execution or authorization"}
+
     def inspect_visa(self, visa_id):
         with self.gateway.read_transaction() as db:
             if db.execute("SELECT 1 FROM visas WHERE id=?", (visa_id,)).fetchone() is None:
