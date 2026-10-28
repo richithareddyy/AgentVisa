@@ -39,7 +39,7 @@ def main():
         demo = command('demo')
         if evaluation['case_count'] != 42 or evaluation['exact_decision_accuracy'] != 1:
             raise RuntimeError('installed evaluation failed')
-        if [row['decision'] for row in demo] != ['ALLOW', 'DENY', 'ASK_HUMAN', 'ALLOW', 'DENY', 'DENY', 'DENY']:
+        if [row['decision'] for row in demo] != ['ALLOW', 'ALLOW', 'DENY', 'ASK_HUMAN', 'ALLOW', 'DENY', 'DENY', 'DENY']:
             raise RuntimeError('installed demo failed')
         print('Wheel installed outside checkout: 42 evaluation cases and all demo scenarios passed.')
 

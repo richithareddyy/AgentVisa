@@ -12,7 +12,7 @@ def test_labeled_regression_dataset():
 
 
 def test_six_demo_scenarios():
-    assert [r["decision"] for r in demo()] == ["ALLOW", "DENY", "ASK_HUMAN", "ALLOW", "DENY", "DENY", "DENY"]
+    assert [r["decision"] for r in demo()] == ["ALLOW", "ALLOW", "DENY", "ASK_HUMAN", "ALLOW", "DENY", "DENY", "DENY"]
 
 
 def test_bundled_evaluation_ignores_working_directory(tmp_path, monkeypatch):

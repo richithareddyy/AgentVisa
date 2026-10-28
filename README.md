@@ -68,6 +68,7 @@ The focused stack is Python, FastAPI, SQLite and a small custom policy engine. S
 
 The offline intent baseline combines trusted catalog categories with narrow reviewed text patterns. Its scores are heuristic diagnostics, not calibrated probabilities. It supports monitor procurement only. The human-approved `purpose` field is canonical; mission text is explanatory. Arbitrary natural-language mission interpretation is not implemented.
 
+- [Requirements review and acceptance evidence](docs/requirements-review.md)
 - [Architecture and transaction semantics](docs/architecture.md)
 - [API walkthrough](docs/api.md)
 - [Human operator CLI](docs/operator.md)
