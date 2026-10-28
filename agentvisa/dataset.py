@@ -1,14 +1,21 @@
 """Validate the entire evaluation dataset before creating any simulation state."""
 import json
+import hashlib
 import re
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from .json_input import validate_json
 from .models import Action, draft
 
 MAX_DATASET_BYTES = 4 * 1024 * 1024
 
 
-def load_cases(source):
+@dataclass(frozen=True)
+class Dataset:
+    cases: list[dict]
+    sha256: str
+
+
+def load_dataset(source):
     with source.open('rb') as stream:
         raw = stream.read(MAX_DATASET_BYTES + 1)
     if len(raw) > MAX_DATASET_BYTES:
@@ -58,4 +65,4 @@ def load_cases(source):
                 raise ValueError
         except (ValueError, TypeError, KeyError):
             raise ValueError(f'invalid dataset case at position {position}; check fields, labels, ID and precondition') from None
-    return cases
+    return Dataset(cases, hashlib.sha256(raw).hexdigest())

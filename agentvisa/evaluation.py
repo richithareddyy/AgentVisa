@@ -8,7 +8,7 @@ import statistics
 import tempfile
 import time
 from .gateway import Gateway
-from .dataset import load_cases
+from .dataset import load_dataset
 from .models import Action, draft
 
 
@@ -19,7 +19,8 @@ def percentile(values, proportion):
 
 def run(dataset: str | None = None) -> dict:
     source = Path(dataset) if dataset is not None else files("agentvisa").joinpath("data/cases.json")
-    cases = load_cases(source)
+    loaded = load_dataset(source)
+    cases = loaded.cases
     records, latency, policy_latency = [], [], []
     for case in cases:
         with tempfile.TemporaryDirectory() as directory:
@@ -56,6 +57,16 @@ def run(dataset: str | None = None) -> dict:
     escalation = [r for r in records if r["category"] == "delegation_escalation"]
     ratio = lambda rows, predicate: sum(predicate(r) for r in rows) / len(rows) if rows else None
     return {
+        "report_schema_version": 1, "dataset_sha256": loaded.sha256,
+        "metric_sample_counts": {
+            "dangerous_false_allow_rate": len(dangerous),
+            "false_deny_rate": len(safe), "unnecessary_review_rate": len(safe),
+            "exact_decision_accuracy": len(records),
+            "mission_drift_detection_rate": len(drift),
+            "prompt_injection_containment_rate": len(injection),
+            "delegation_escalation_prevention_rate": len(escalation),
+            "gateway_latency_ms": len(latency), "deterministic_policy_latency_ms": len(policy_latency)},
+        "category_counts": dict(sorted(Counter(r["category"] for r in records).items())),
         "dataset": source.name, "case_count": len(records), "python": platform.python_version(),
         "evaluator": "ProcurementEvaluator; offline heuristic baseline",
         "scope": "curated regression fixtures; not a production safety estimate or held-out model benchmark",

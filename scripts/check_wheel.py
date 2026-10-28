@@ -1,6 +1,8 @@
 """Install one wheel in a fresh environment and exercise bundled offline commands."""
 import argparse
 import json
+import hashlib
+import zipfile
 from pathlib import Path
 import subprocess
 import tempfile
@@ -30,6 +32,10 @@ def main():
                                     check=True, capture_output=True, text=True)
             return json.loads(result.stdout)
         evaluation = command('evaluate')
+        with zipfile.ZipFile(wheel) as archive:
+            expected_digest = hashlib.sha256(archive.read('agentvisa/data/cases.json')).hexdigest()
+        if evaluation.get('dataset_sha256') != expected_digest:
+            raise RuntimeError('installed evaluation used a different dataset')
         demo = command('demo')
         if evaluation['case_count'] != 42 or evaluation['exact_decision_accuracy'] != 1:
             raise RuntimeError('installed evaluation failed')
