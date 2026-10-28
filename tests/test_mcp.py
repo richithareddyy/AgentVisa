@@ -90,7 +90,7 @@ def test_mcp_surface_has_no_human_controls_and_rejects_extra_fields():
     async def check():
         async with Client(server) as client:
             tools = await client.list_tools()
-            assert [tool.name for tool in tools.tools] == ["execute_action"]
+            assert [tool.name for tool in tools.tools] == ["execute_action", "get_request_status"]
             result = await client.call_tool("execute_action", {"action": {**action().model_dump(), "agent_id": "admin"}})
             assert result.is_error
     asyncio.run(check())
@@ -125,7 +125,9 @@ def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
                                            env={"AGENTVISA_AGENT_TOKEN": next(iter(config["agent_tokens"])), "AGENTVISA_GATEWAY_URL": origin})
             async def exercise():
                 async with Client(params) as mcp:
-                    assert [tool.name for tool in (await mcp.list_tools()).tools] == ["execute_action"]
+                    assert [tool.name for tool in (await mcp.list_tools()).tools] == ["execute_action", "get_request_status"]
+                    missing = await mcp.call_tool("get_request_status", {"request": {"request_id": "missing"}})
+                    assert missing.structured_content["found"] is False
                     body = action(visa_id=visa).model_dump()
                     result = await mcp.call_tool("execute_action", {"action": body})
                     assert result.structured_content["decision"] == "ALLOW"
@@ -133,6 +135,8 @@ def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
                     assert (await mcp.call_tool("execute_action", {"action": modified})).structured_content["decision"] == "DENY"
                     body.update(request_id="buy", tool="purchase", resource="vendor:approved", arguments={"product_id": "monitor-pro", "quantity": 1})
                     assert (await mcp.call_tool("execute_action", {"action": body})).structured_content["decision"] == "ASK_HUMAN"
+                    status = await mcp.call_tool("get_request_status", {"request": {"request_id": "buy"}})
+                    assert status.structured_content["state"] == "pending"
                     inspected = http.get("/approvals/inspect?agent=procurement&request_id=buy", headers=admin).json()
                     http.post("/approvals", headers=admin, json={"agent_id": "procurement", "request_id": "buy", "approve": True, "expected_fingerprint": inspected["fingerprint"]}).raise_for_status()
                     assert (await mcp.call_tool("execute_action", {"action": body})).structured_content["executed"]
@@ -140,6 +144,9 @@ def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
                     http.post(f"/visas/{visa}/revoke", headers=admin).raise_for_status()
                     body["request_id"] = "revoked"
                     assert (await mcp.call_tool("execute_action", {"action": body})).structured_content["decision"] == "DENY"
+                    status = await mcp.call_tool("get_request_status", {"request": {"request_id": "buy"}})
+                    assert status.structured_content["state"] == "completed"
+                    assert status.structured_content["last_response"]["executed"]
                     assert len(http.get("/control", headers=admin).json()["effects"]) == 2
             asyncio.run(exercise())
     finally:

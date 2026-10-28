@@ -1,6 +1,6 @@
 # MCP agent integration
 
-The optional stdio bridge exposes exactly one tool: `execute_action`. It forwards an action to the authenticated HTTP gateway. It has no direct tool adapters, database access code, human approval route, visa issuance or policy-editing tools.
+The optional stdio bridge exposes two tools: `execute_action` forwards an action to the authenticated HTTP gateway, and `get_request_status` reads that agent’s stored request state. It has no direct tool adapters, database access code, human approval route, visa issuance or policy-editing tools.
 
 ```text
 MCP host → stdio bridge (agent token) → HTTP gateway → policy + intent → simulated effect
@@ -72,3 +72,17 @@ The stdio host/launcher is trusted to provision the correct agent credential. Ru
 ## Sources
 
 The implementation follows the official [SDK v2 API](https://py.sdk.modelcontextprotocol.io/whats-new/) and [stdio transport documentation](https://py.sdk.modelcontextprotocol.io/client/transports/). MCP's [authorization specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) distinguishes environment-provisioned stdio credentials from HTTP authorization. These transport mechanisms complement, rather than replace, mission policy at the gateway.
+
+## Check an uncertain outcome
+
+Invoke `get_request_status` with:
+
+```json
+{"request":{"request_id":"monitor-purchase-1"}}
+```
+
+The bridge uses its configured agent credential and a fixed GET endpoint. No identity, URL or credential can be supplied in the tool arguments. A successful lookup returns `found: true` with the stored state and historical response. A 404 returns `found: false`, which does not rule out an in-flight commit. Authentication, transport, malformed/oversized responses and other HTTP failures return tool errors rather than a fabricated status.
+
+Status responses are checked for request-ID binding, valid state/decision combinations, boolean execution flags, fingerprint format and consistent review deadline/expiry fields. Reads use the same bounded transport policy as execution: no proxies or redirects, a 256 KiB response cap, network timeouts and a ten-second overall deadline. This schema validation does not authenticate a compromised gateway’s claims.
+
+An approved request still requires retrying the exact original action through `execute_action`; status lookup never executes or approves anything. A completed ALLOW is historical. Keep the original request ID and action when resolving an uncertain outcome.
