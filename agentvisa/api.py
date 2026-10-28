@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field
 from .gateway import Gateway
+from .json_input import validate_json
 from .models import Action, Contract, draft
 from .queries import ReadModel, MAX_CURSOR
 
@@ -58,12 +59,25 @@ class BodyLimit:
             chunks.append(message.get("body", b""))
             if not message.get("more_body", False):
                 break
+        body = b"".join(chunks)
+        if body:
+            content_types = [value.decode("latin-1").split(";", 1)[0].strip().lower()
+                             for key, value in scope.get("headers", []) if key.lower() == b"content-type"]
+            if len(content_types) != 1 or not (content_types[0] == "application/json" or
+                    (content_types[0].startswith("application/") and content_types[0].endswith("+json"))):
+                response = JSONResponse({"detail": "a single JSON Content-Type is required"}, status_code=415)
+                return await response(scope, receive, send)
+            try:
+                validate_json(body)
+            except (ValueError, RecursionError):
+                response = JSONResponse({"detail": "invalid or ambiguous JSON request"}, status_code=400)
+                return await response(scope, receive, send)
         sent = False
         async def bounded_receive():
             nonlocal sent
             if not sent:
                 sent = True
-                return {"type": "http.request", "body": b"".join(chunks), "more_body": False}
+                return {"type": "http.request", "body": body, "more_body": False}
             return await receive()
         await self.app(scope, bounded_receive, send)
 

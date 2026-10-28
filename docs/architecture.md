@@ -25,6 +25,7 @@ flowchart LR
 | `intent.py` | Structured evaluator interface and procurement baseline |
 | `semantic.py` | Optional remote review that cannot relax the baseline |
 | `gateway.py` | Transactions, budgets, approvals, effects and audit |
+| `json_input.py` | Strict JSON validation before HTTP route processing |
 | `api.py` | Credential separation, bounded HTTP bodies and operator routes |
 | `storage.py` | Private POSIX database creation and preconnection file checks |
 | `queries.py` | Bounded keyset reads, filters and exact approval inspection |

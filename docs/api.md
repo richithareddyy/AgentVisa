@@ -60,3 +60,9 @@ POST a full child contract to `/visas/{visa_id}/delegate` using the parent's age
 Correcting an action needs a new request ID. Never change IDs just to resolve an unknown execution outcome. GET `/audit/integrity` as administrator verifies the local hash chain. `/health` is public liveness with simulation mode only. `/control` is an unpaginated local development snapshot, not a production monitoring API.
 
 The standalone `examples/agent_client.py` uses only agent credentials and calls only the gateway.
+
+## HTTP request format
+
+Nonempty request bodies require exactly one Content-Type header naming `application/json` or an `application/*+json` media type. Bodies must be UTF-8 JSON, at most 64 KiB, with no duplicate object keys (including escaped equivalents), nonfinite numbers, lone Unicode surrogates, or more than 64 nested containers. Chunked bodies follow the same rules. Empty bodies remain supported for routes such as revocation; schema-required bodies still undergo normal route validation.
+
+Unsupported/missing media types return 415; malformed or ambiguous JSON returns a generic 400; oversized bodies return 413. Schema violations continue to return 422. These checks run before route authorization and state changes and do not echo submitted values. They do not create decision audit records; deployments needing boundary-failure telemetry must add redacted access monitoring. This validation adds no rate limit or request-body read timeout.
