@@ -45,4 +45,4 @@ Static bearer tokens, one administrator and POSIX file checks serve the local pr
 
 ## Remaining submission work
 
-Two planned milestones remain: a concise demonstration/submission guide, then final integration and remote CI verification with a packaged release. No additional product features are required for those milestones. Any unresolved verification failures must be reported rather than described as production readiness.
+The demonstration and submission guides are complete. One planned milestone remains: final integration and remote CI verification with a packaged release. No additional product features are required for those milestones. Any unresolved verification failures must be reported rather than described as production readiness.
