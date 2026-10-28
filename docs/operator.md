@@ -58,7 +58,7 @@ python -m agentvisa.operator --config .agentvisa.local.json revoke --visa VISA_I
 python -m agentvisa.operator --config .agentvisa.local.json delegations
 ```
 
-Modification submits a complete reviewed contract and preserves the existing identity/mission. Edits invalidate outstanding approvals for the affected subtree. Revocation blocks new descendant effects. Delegation output includes visa IDs, parent pointers, agents, status and cumulative spending; it does not create child credentials.
+Modification submits a complete reviewed contract and preserves the existing identity/mission. Edits and revocations invalidate pending and approved reviews for the affected subtree and remove them from the outstanding review queue. Revocation also blocks new descendant effects. Lifecycle audit records include `invalidated_reviews`; repeating revocation normally records zero newly invalidated reviews. Delegation output includes visa IDs, parent pointers, agents, status and cumulative spending; it does not create child credentials.
 
 ## Investigate decisions
 

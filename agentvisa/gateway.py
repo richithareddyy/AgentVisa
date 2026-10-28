@@ -31,6 +31,7 @@ class Gateway:
                     id TEXT PRIMARY KEY, parent TEXT REFERENCES visas(id), contract TEXT NOT NULL,
                     issued_at INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'active',
                     spent INTEGER NOT NULL DEFAULT 0, actions INTEGER NOT NULL DEFAULT 0);
+                CREATE INDEX IF NOT EXISTS visas_parent ON visas(parent);
                 CREATE TABLE IF NOT EXISTS requests (
                     principal TEXT NOT NULL, id TEXT NOT NULL, fingerprint TEXT NOT NULL,
                     action TEXT NOT NULL, response TEXT NOT NULL, approval TEXT NOT NULL,
@@ -126,11 +127,24 @@ class Gateway:
                 result = {"decision": "DENY", "reason": str(exc)}
             return result
 
+    @staticmethod
+    def _invalidate_reviews(db, visa_id: str) -> int:
+        # UNION deduplicates nodes, including in a malformed cyclic stored graph.
+        db.execute("""WITH RECURSIVE subtree(id) AS (
+            SELECT id FROM visas WHERE id=?
+            UNION
+            SELECT v.id FROM visas v JOIN subtree s ON v.parent=s.id
+        ) UPDATE requests SET approval='invalidated'
+          WHERE approval IN ('pending','approved')
+          AND json_extract(action, '$.visa_id') IN (SELECT id FROM subtree)""", (visa_id,))
+        return db.execute("SELECT changes()").fetchone()[0]
+
     def revoke(self, visa_id: str) -> None:
         with self.transaction() as db:
             self._chain(db, visa_id)
             db.execute("UPDATE visas SET status='revoked' WHERE id=?", (visa_id,))
-            self._audit(db, {"event": "visa_revoked", "visa_id": visa_id})
+            invalidated = self._invalidate_reviews(db, visa_id)
+            self._audit(db, {"event": "visa_revoked", "visa_id": visa_id, "invalidated_reviews": invalidated})
 
     def modify(self, visa_id: str, contract: Contract) -> None:
         """Human edits are rechecked on all subsequent actions, including approvals."""
@@ -142,13 +156,9 @@ class Gateway:
             if len(chain) > 1:
                 attenuation(chain[1][1], contract)
             db.execute("UPDATE visas SET contract=? WHERE id=?", (encode(contract.dictionary()), visa_id))
-            # Edits invalidate pending approvals; callers must submit a new request.
-            pending = db.execute("SELECT principal,id,action FROM requests WHERE approval IN ('pending','approved')").fetchall()
-            for row in pending:
-                action_visa = json.loads(row["action"])["visa_id"]
-                if any(r["id"] == visa_id for r, _ in self._chain(db, action_visa)):
-                    db.execute("UPDATE requests SET approval='invalidated' WHERE principal=? AND id=?", (row["principal"], row["id"]))
-            self._audit(db, {"event": "visa_modified", "visa_id": visa_id, "before": old.dictionary(), "after": contract.dictionary()})
+            invalidated = self._invalidate_reviews(db, visa_id)
+            self._audit(db, {"event": "visa_modified", "visa_id": visa_id, "before": old.dictionary(),
+                             "after": contract.dictionary(), "invalidated_reviews": invalidated})
 
     def approve(self, principal: str, request_id: str, approve: bool, expected_fingerprint: str | None = None) -> dict:
         if type(approve) is not bool:

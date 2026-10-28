@@ -70,3 +70,5 @@ Unsupported/missing media types return 415; malformed or ambiguous JSON returns 
 ## Visa inspection
 
 Administrator-only GET `/visas/inspect?visa_id=VISA_ID` returns a bounded ancestor chain, `server_time`, inherited `effective_limits` and per-ancestor `blockers`. Unknown visas return 404; invalid identifiers return 422. Reads have no audit or policy side effects. See the operator inspection documentation for shared-budget and snapshot limitations. An empty blocker list is not an ALLOW decision.
+
+Revocation and policy modification invalidate pending and approved reviews for the selected visa and all descendants in the same transaction as the policy change and audit event. Invalidated reviews disappear from outstanding lists and exact review inspection returns 404. Their stored request history remains, and retries cannot reuse the invalidated approval. The lifecycle audit event includes `invalidated_reviews`. Completed request replay still returns its original historical result without creating another effect.
