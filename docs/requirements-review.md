@@ -43,6 +43,6 @@ Protected effects are SQLite simulation records. Real payments, email delivery, 
 
 Static bearer tokens, one administrator and POSIX file checks serve the local prototype. There is no production identity provider, tenant isolation, public deployment or browser console. The console was optional in the brief; the authenticated API and CLI supply the control surface. Audit checkpoints are unsigned and need separately protected storage. Tests and curated evaluation results are evidence for the implemented scope, not guarantees against arbitrary attacks.
 
-## Remaining submission work
+## Submission closeout
 
-The demonstration and submission guides are complete. One planned milestone remains: final integration and remote CI verification with a packaged release. No additional product features are required for those milestones. Any unresolved verification failures must be reported rather than described as production readiness.
+The requirements review and demonstration/submission guides are complete. The final release procedure verifies local tests, clean-wheel installation and remote CI, then records the exact source commit and artifact hashes in the accompanying release manifest. No additional product features are planned for this submission. This closeout does not imply production readiness.

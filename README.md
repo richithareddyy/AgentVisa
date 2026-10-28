@@ -16,6 +16,8 @@ This is a working prototype with **simulated tool effects**, durable state, an a
 
 Start with the [submission overview](docs/submission-overview.md) and [demonstration guide](docs/demonstration.md) for a concise walkthrough.
 
+See [release notes](RELEASE.md) for package contents, installation and checksum verification.
+
 ## Run locally
 
 Requires Python 3.11 or newer on a POSIX host (such as macOS or Linux) with `O_NOFOLLOW` support. From this repository:
