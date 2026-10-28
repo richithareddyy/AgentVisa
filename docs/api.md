@@ -59,7 +59,16 @@ POST a full child contract to `/visas/{visa_id}/delegate` using the parent's age
 
 Correcting an action needs a new request ID. Never change IDs just to resolve an unknown execution outcome. GET `/audit/integrity` as administrator verifies the local hash chain. `/health` is public liveness with simulation mode only. `/control` is an unpaginated local development snapshot, not a production monitoring API.
 
-The standalone `examples/agent_client.py` uses only agent credentials and calls only the gateway.
+The standalone `examples/agent_client.py` uses only agent credentials and calls only the gateway. With `AGENTVISA_AGENT_TOKEN` set privately, run:
+
+```sh
+python examples/agent_client.py search --request-id monitor-search-1 --visa VISA_ID
+python examples/agent_client.py status --request-id monitor-search-1
+```
+
+Search always submits the same fixed monitor-catalog query. The request ID is required; the example no longer generates a new ID on each launch. `--visa` may instead come from `AGENTVISA_VISA_ID`. Status needs no visa and sends only a GET. Set a trusted origin with `--url` before the subcommand if needed. Redirects and ambient proxies are disabled; response size is capped at 256 KiB. The five-second timeout applies per network operation, not to the full command.
+
+After a timeout, preserve the exact original action and ID. Status can return a historical response or an absent snapshot; absence does not rule out an in-flight commit. Retrying search with the same ID and visa is idempotent. A genuinely new search needs a new ID. The example never automatically retries or changes IDs and is a small catalog example, not a general-purpose autonomous agent.
 
 ## HTTP request format
 
