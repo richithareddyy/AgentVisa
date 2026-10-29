@@ -35,7 +35,7 @@ python -m agentvisa serve
 
 Initialization creates `.agentvisa.local.json` with random, separate administrator and agent credentials and owner-only permissions. It refuses to overwrite an existing file. Credentials and databases are ignored by Git. Database files are created with owner-only permissions; existing unsafe files are rejected. See [private storage requirements](docs/storage.md) before reusing an older database. Keep the config private; an agent receives only its own token.
 
-The API binds to `127.0.0.1:8000`; interactive endpoint documentation is at `http://127.0.0.1:8000/docs`. The configured agent is `procurement`. Use the [operator CLI](docs/operator.md) to draft and issue visas, inspect exact pending actions, approve or reject requests, revoke authority and review audits. The [API walkthrough](docs/api.md) documents direct calls.
+The API binds to `127.0.0.1:8000`; the browser dashboard is at `http://127.0.0.1:8000/`, and interactive endpoint documentation is at `http://127.0.0.1:8000/docs`. The configured agent is `procurement`. Use the [operator CLI](docs/operator.md) to draft and issue visas, inspect exact pending actions, approve or reject requests, revoke authority and review audits. The [API walkthrough](docs/api.md) documents direct calls.
 
 ## Implemented behavior
 
@@ -81,7 +81,7 @@ The offline intent baseline combines trusted catalog categories with narrow revi
 - [Optional semantic service protocol](docs/semantic.md)
 - [Security assumptions and production gaps](SECURITY.md)
 
-An optional MCP stdio bridge is available with `pip install -e '.[mcp]' -c requirements.lock`. There is no MCP Streamable HTTP endpoint, OAuth issuer, real payment adapter or browser console in this version. The API and operator snapshot provide the control surface. Agents must run outside the trusted gateway process, without direct tool credentials or database access.
+An optional MCP stdio bridge is available with `pip install -e '.[mcp]' -c requirements.lock`. There is no MCP Streamable HTTP endpoint, OAuth issuer, real payment adapter in this version. The local browser dashboard and operator CLI provide the control surface. See the [dashboard guide](docs/dashboard.md) for the browser workflow. Agents must run outside the trusted gateway process, without direct tool credentials or database access.
 
 See [audit exports and independently held checkpoints](docs/audit-exports.md) for offline prefix verification and its trust limitations.
 

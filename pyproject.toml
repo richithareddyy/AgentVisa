@@ -20,4 +20,4 @@ include = ["agentvisa*"]
 testpaths = ["tests"]
 
 [tool.setuptools.package-data]
-agentvisa = ["data/*.json"]
+agentvisa = ["data/*.json", "web/*.html", "web/*.css", "web/*.js"]
