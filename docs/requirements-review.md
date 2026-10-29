@@ -41,7 +41,7 @@ The issuer accepts a bounded monitor-purchase grammar, not arbitrary mission int
 
 Protected effects are SQLite simulation records. Real payments, email delivery, operating-system isolation, provider credentials, external idempotency and reconciliation require a separate design. Agents must be deployed outside the trusted gateway process without direct database/tool access.
 
-Static bearer tokens, one administrator and POSIX file checks serve the local prototype. There is no production identity provider, tenant isolation, public deployment or browser console. The console was optional in the brief; the authenticated API and CLI supply the control surface. Audit checkpoints are unsigned and need separately protected storage. Tests and curated evaluation results are evidence for the implemented scope, not guarantees against arbitrary attacks.
+Static bearer tokens, one administrator and POSIX file checks serve the local prototype. There is no production identity provider, tenant isolation, public deployment. The optional browser console is now provided by the [local dashboard](dashboard.md), alongside the authenticated API and CLI. Audit checkpoints are unsigned and need separately protected storage. Tests and curated evaluation results are evidence for the implemented scope, not guarantees against arbitrary attacks.
 
 ## Submission closeout
 

@@ -36,3 +36,7 @@ The final local run on October 28, 2026 passed all 337 tests. `pip check` report
 The preceding documentation commit `773733c9b2b025d57f8be9062cbb59768e5f4adf` passed [GitHub Actions run 40649558365](https://github.com/richithareddyy/AgentVisa/actions/runs/40649558365). The final package’s exact commit, CI run and SHA-256 values are recorded in the release manifest distributed beside the source ZIP and wheel. Consult that manifest rather than assuming this earlier run applies to a later commit.
 
 Artifact review covers tracked source/document text, Markdown links, wheel contents and package metadata, excluded runtime/configuration files, ZIP comments and extra fields. No unexpected attribution was found in the inspected content. Ordinary archive timestamps and build-tool metadata remain; absence of every possible trace or metadata field is not asserted.
+
+## Dashboard extension
+
+The local dashboard extension passed 339 tests. New coverage checks public static assets without credential disclosure, security response headers, closed asset paths and the fingerprint-bound human review flow with separate agent execution and idempotent replay. A live browser walkthrough in an isolated temporary workspace verified mission preview/issuance, a $275 ASK_HUMAN purchase, explicit approval, execution, replay without a second effect, and a $450 policy denial. The installable wheel includes the HTML, CSS and JavaScript assets. The dashboard guide describes session-only credentials and recovery limits.

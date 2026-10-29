@@ -2,7 +2,7 @@
 
 Release date: October 28, 2026.
 
-This release packages the completed mission-scoped authorization prototype and its submission documentation. It includes temporary contracts, delegated authority, deterministic and intent checks, exact-action human approval, simulated transactional effects, audit verification, HTTP/MCP integration, operator tooling and adversarial evaluation.
+This release packages the completed mission-scoped authorization prototype and its submission documentation. It includes temporary contracts, delegated authority, deterministic and intent checks, exact-action human approval, simulated transactional effects, audit verification, HTTP/MCP integration, operator tooling, a local browser dashboard and adversarial evaluation.
 
 Start with the [submission overview](docs/submission-overview.md), then follow the [demonstration guide](docs/demonstration.md). The [requirements review](docs/requirements-review.md) maps the original brief to executable evidence. The [verification record](docs/verification.md) describes the checks and their limits.
 
@@ -29,6 +29,6 @@ Install the source extras described in the README for tests and MCP. The wheel a
 
 ## Verification and scope
 
-The final local suite passed 337 tests, and the 42-case curated evaluation matched every expected decision with zero automatic allows among 33 dangerous/review-required cases. The wheel’s offline commands were checked in a fresh environment outside the checkout. Final remote CI is tied to the exact commit in the release manifest.
+The dashboard extension increased the local suite to 339 passing tests, and the 42-case curated evaluation matched every expected decision with zero automatic allows among 33 dangerous/review-required cases. The wheel’s offline commands were checked in a fresh environment outside the checkout. Final remote CI is tied to the exact commit in the release manifest.
 
 This remains a local, single-administrator prototype with simulated effects and a procurement-specific baseline. It has no real payment/email provider, production identity service, tenant isolation or public deployment. The evaluation is a regression dataset, not a general safety estimate. See [SECURITY.md](SECURITY.md) for trusted-host, checkpoint, timeout and deployment assumptions.
