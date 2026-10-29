@@ -1,14 +1,294 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgentVisa · Mission control</title><link rel="stylesheet" href="/dashboard/style.css"><script src="/dashboard/app.js" defer></script></head>
-<body>
-<aside class="sidebar"><a class="brand" href="/" aria-label="AgentVisa home"><span class="mark">V</span>AgentVisa</a><div class="workspace">LOCAL WORKSPACE</div><nav aria-label="Main navigation"><button class="nav active" data-view="missions">01 <span>Missions</span></button><button class="nav" data-view="actions">02 <span>Try an action</span></button><button class="nav" data-view="approvals">03 <span>Human review</span></button><button class="nav" data-view="audit">04 <span>Activity</span></button></nav><div class="sidebar-note"><span class="dot"></span> Simulation mode<p>Explore authority boundaries.<br>No real purchases or emails.</p></div></aside>
-<main><header><div><div class="eyebrow">AUTHORITY, WITH BOUNDARIES</div><h1 id="page-title">Mission control</h1></div><button id="session-toggle" class="secondary">Connect workspace</button></header>
-<div id="notice" role="status" aria-live="polite" hidden></div>
-<section id="connection" class="panel"><div class="section-heading"><div><h2>Connect your local workspace</h2><p>Choose the private configuration created by AgentVisa to get started.</p></div><span class="tag">ON THIS DEVICE</span></div><label class="file-label">Choose configuration file<input id="config-file" type="file" accept=".json,application/json"></label><p class="hint">Select <code>.agentvisa.local.json</code> inside your AgentVisa folder. In the Mac file picker, press Command + Shift + . to show hidden files. The file is read locally; credentials stay in this page’s memory until you disconnect or reload.</p><details><summary>Connect with credentials instead</summary><form id="connect-form" class="form-grid"><label>Administrator token<input id="admin-token" type="password" autocomplete="off" required></label><label>Agent token<input id="agent-token" type="password" autocomplete="off" required></label><label>Agent identity<input id="agent-id" value="procurement" required maxlength="100"></label><button type="submit">Connect</button></form></details><label id="identity-label" hidden>Configured agent<select id="identity-choice"></select></label></section>
-<section id="missions-view" class="view"><div class="intro"><h2>Give your agent a clear brief.</h2><p>Create a temporary mission, review its boundaries, then try an action.</p></div><div class="columns"><section class="panel"><span class="step">01 / DEFINE AUTHORITY</span><h2>Create a monitor mission</h2><p>This prototype supports monitor procurement in USD.</p><form id="mission-form"><label>Total budget ($)<input id="budget" type="number" min="0.01" max="999999" step="0.01" value="300" required></label><label>Ask for approval above ($)<input id="threshold" type="number" min="0" max="999999" step="0.01" value="250" required></label><button type="submit" data-connected>Preview mission</button></form><div id="draft-panel" hidden><h3>Review before issuing</h3><p id="draft-summary"></p><details><summary>Full contract and permissions</summary><pre id="draft-json"></pre></details><button id="issue" data-connected>Issue this mission</button></div></section><section class="panel"><div class="section-heading"><h2>Your missions</h2><button id="refresh-missions" class="text-button" data-connected>Refresh</button></div><p class="hint">Select a mission to see its inherited limits or try actions. Lists show oldest first.</p><div id="mission-list" class="stack"><p class="empty">Connect your workspace to view missions.</p></div><button id="more-missions" class="secondary" hidden>Load more missions</button></section></div><section id="visa-detail" class="panel" hidden><h2>Mission boundaries</h2><div id="visa-summary" class="metrics"></div><details><summary>Full authority chain</summary><pre id="visa-json"></pre></details><button id="use-visa">Try an action with this mission</button><button id="revoke" class="danger secondary">Revoke mission</button></section></section>
-<section id="actions-view" class="view" hidden><div class="intro"><h2>See where authority stops.</h2><p>Every proposal goes through the same policy and intent checks as an agent request.</p></div><div class="columns"><section class="panel"><span class="step">02 / PROPOSE AN ACTION</span><form id="action-form"><label>Mission<select id="action-visa" required><option value="">Create or select a mission first</option></select></label><label>Action<select id="scenario"><option value="search">Search the monitor catalog</option><option value="compare">Compare two monitors</option><option value="basic">Buy an office monitor · $180</option><option value="pro">Buy a productivity monitor · $275</option><option value="ultra">Buy a studio monitor · $450</option><option value="drift">Request payroll information</option><option value="upload">Attempt an unauthorized file upload</option></select></label><p id="scenario-hint" class="hint"></p><button type="submit" data-connected>Submit new action</button></form><p class="hint">Each new proposal gets its own request ID. To recover an uncertain response or execute after approval, retry the exact request below.</p></section><section class="panel"><h2>Decision</h2><div id="decision"><p class="empty">Submit an action to see its decision and explanation.</p></div><div id="request-controls" hidden><p id="request-label" class="hint"></p><button id="request-status" class="secondary">Check request status</button><button id="retry" class="secondary">Retry exact request</button></div></section></div></section>
-<section id="approvals-view" class="view" hidden><div class="intro"><h2>You make the final call.</h2><p>Inspect the exact action before approving. Approval does not execute the action or override a hard limit.</p></div><div class="columns"><section class="panel"><div class="section-heading"><h2>Outstanding requests</h2><button id="refresh-approvals" class="text-button" data-connected>Refresh</button></div><div id="approval-list" class="stack"><p class="empty">Connect your workspace to view requests.</p></div><button id="more-approvals" class="secondary" hidden>Load more requests</button></section><section class="panel"><h2>Review details</h2><div id="review-detail"><p class="empty">Select a request to inspect its action, cost, deadline, and reason.</p></div><div id="review-controls" hidden><button id="approve">Approve exact action</button><button id="reject" class="secondary danger">Reject request</button></div><button id="execute-approved" hidden>Retry inspected action as agent</button></section></div></section>
-<section id="audit-view" class="view" hidden><div class="intro"><h2>A record of every boundary.</h2><p>Inspect decisions and mission changes in the local audit trail.</p></div><section class="panel"><div class="section-heading"><h2>Activity log</h2><div><button id="integrity" class="secondary" data-connected>Verify local chain</button><button id="refresh-audit" class="text-button" data-connected>Refresh</button></div></div><p class="hint">Oldest first, 25 entries per page. Chain verification checks local consistency, not independent proof of history.</p><div id="audit-list" class="stack"><p class="empty">Connect your workspace to view activity.</p></div><button id="more-audit" class="secondary" hidden>Load more events</button></section></section>
-<footer>AgentVisa <span>Limited authority. Explicit decisions.</span><a href="/docs" target="_blank" rel="noopener">API reference ↗</a></footer>
-</main></body></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AgentVisa · Mission control</title>
+    <link rel="stylesheet" href="/dashboard/style.css" />
+    <script src="/dashboard/app.js" defer></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="AgentVisa home"
+        ><span class="mark">V</span>AgentVisa</a
+      >
+      <div class="workspace">LOCAL WORKSPACE</div>
+      <nav aria-label="Main navigation">
+        <button class="nav active" data-view="missions">
+          01 <span>Missions</span></button
+        ><button class="nav" data-view="actions">
+          02 <span>Try an action</span></button
+        ><button class="nav" data-view="approvals">
+          03 <span>Human review</span></button
+        ><button class="nav" data-view="audit">04 <span>Activity</span></button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="dot"></span> Simulation mode
+        <p>Explore authority boundaries.<br />No real purchases or emails.</p>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <div class="eyebrow">AUTHORITY, WITH BOUNDARIES</div>
+          <h1 id="page-title">Mission control</h1>
+        </div>
+        <button id="session-toggle" class="secondary">Connect workspace</button>
+      </header>
+      <div id="notice" role="status" aria-live="polite" hidden></div>
+      <section id="connection" class="panel">
+        <div class="section-heading">
+          <div>
+            <h2>Connect your local workspace</h2>
+            <p>
+              Choose the private configuration created by AgentVisa to get
+              started.
+            </p>
+          </div>
+          <span class="tag">ON THIS DEVICE</span>
+        </div>
+        <label class="file-label"
+          >Choose configuration file<input
+            id="config-file"
+            type="file"
+            accept=".json,application/json"
+        /></label>
+        <p class="hint">
+          Select <code>.agentvisa.local.json</code> inside your AgentVisa
+          folder. In the Mac file picker, press Command + Shift + . to show
+          hidden files. The file is read locally; credentials stay in this
+          page’s memory until you disconnect or reload.
+        </p>
+        <details>
+          <summary>Connect with credentials instead</summary>
+          <form id="connect-form" class="form-grid">
+            <label
+              >Administrator token<input
+                id="admin-token"
+                type="password"
+                autocomplete="off"
+                required /></label
+            ><label
+              >Agent token<input
+                id="agent-token"
+                type="password"
+                autocomplete="off"
+                required /></label
+            ><label
+              >Agent identity<input
+                id="agent-id"
+                value="procurement"
+                required
+                maxlength="100" /></label
+            ><button type="submit">Connect</button>
+          </form>
+        </details>
+        <label id="identity-label" hidden
+          >Configured agent<select id="identity-choice"></select
+        ></label>
+      </section>
+      <section id="missions-view" class="view">
+        <div class="intro">
+          <h2>Give your agent a clear brief.</h2>
+          <p>
+            Create a temporary mission, review its boundaries, then try an
+            action.
+          </p>
+        </div>
+        <div class="columns">
+          <section class="panel">
+            <span class="step">01 / DEFINE AUTHORITY</span>
+            <h2>Create a monitor mission</h2>
+            <p>This prototype supports monitor procurement in USD.</p>
+            <form id="mission-form">
+              <label
+                >Total budget ($)<input
+                  id="budget"
+                  type="number"
+                  min="0.01"
+                  max="999999"
+                  step="0.01"
+                  value="300"
+                  required /></label
+              ><label
+                >Ask for approval above ($)<input
+                  id="threshold"
+                  type="number"
+                  min="0"
+                  max="999999"
+                  step="0.01"
+                  value="250"
+                  required /></label
+              ><button type="submit" data-connected>Preview mission</button>
+            </form>
+            <div id="draft-panel" hidden>
+              <h3>Review before issuing</h3>
+              <p id="draft-summary"></p>
+              <details>
+                <summary>Full contract and permissions</summary>
+                <pre id="draft-json"></pre>
+              </details>
+              <button id="issue" data-connected>Issue this mission</button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="section-heading">
+              <h2>Your missions</h2>
+              <button id="refresh-missions" class="text-button" data-connected>
+                Refresh
+              </button>
+            </div>
+            <p class="hint">
+              Select a mission to see its inherited limits or try actions. Lists
+              show oldest first.
+            </p>
+            <div id="mission-list" class="stack">
+              <p class="empty">Connect your workspace to view missions.</p>
+            </div>
+            <button id="more-missions" class="secondary" hidden>
+              Load more missions
+            </button>
+          </section>
+        </div>
+        <section id="visa-detail" class="panel" hidden>
+          <h2>Mission boundaries</h2>
+          <div id="visa-summary" class="metrics"></div>
+          <details>
+            <summary>Full authority chain</summary>
+            <pre id="visa-json"></pre>
+          </details>
+          <button id="use-visa">Try an action with this mission</button
+          ><button id="revoke" class="danger secondary">Revoke mission</button>
+        </section>
+      </section>
+      <section id="actions-view" class="view" hidden>
+        <div class="intro">
+          <h2>See where authority stops.</h2>
+          <p>
+            Every proposal goes through the same policy and intent checks as an
+            agent request.
+          </p>
+        </div>
+        <div class="columns">
+          <section class="panel">
+            <span class="step">02 / PROPOSE AN ACTION</span>
+            <form id="action-form">
+              <label
+                >Mission<select id="action-visa" required>
+                  <option value="">Create or select a mission first</option>
+                </select></label
+              ><label
+                >Action<select id="scenario">
+                  <option value="search">Search the monitor catalog</option>
+                  <option value="compare">Compare two monitors</option>
+                  <option value="basic">Buy an office monitor · $180</option>
+                  <option value="pro">Buy a productivity monitor · $275</option>
+                  <option value="ultra">Buy a studio monitor · $450</option>
+                  <option value="drift">Request payroll information</option>
+                  <option value="upload">
+                    Attempt an unauthorized file upload
+                  </option>
+                </select></label
+              >
+              <p id="scenario-hint" class="hint"></p>
+              <button type="submit" data-connected>Submit new action</button>
+            </form>
+            <p class="hint">
+              Each new proposal gets its own request ID. To recover an uncertain
+              response or execute after approval, retry the exact request below.
+            </p>
+          </section>
+          <section class="panel">
+            <h2>Decision</h2>
+            <div id="decision">
+              <p class="empty">
+                Submit an action to see its decision and explanation.
+              </p>
+            </div>
+            <div id="request-controls" hidden>
+              <p id="request-label" class="hint"></p>
+              <button id="request-status" class="secondary">
+                Check request status</button
+              ><button id="retry" class="secondary">Retry exact request</button>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section id="approvals-view" class="view" hidden>
+        <div class="intro">
+          <h2>You make the final call.</h2>
+          <p>
+            Inspect the exact action before approving. Approval does not execute
+            the action or override a hard limit.
+          </p>
+        </div>
+        <div class="columns">
+          <section class="panel">
+            <div class="section-heading">
+              <h2>Outstanding requests</h2>
+              <button id="refresh-approvals" class="text-button" data-connected>
+                Refresh
+              </button>
+            </div>
+            <div id="approval-list" class="stack">
+              <p class="empty">Connect your workspace to view requests.</p>
+            </div>
+            <button id="more-approvals" class="secondary" hidden>
+              Load more requests
+            </button>
+          </section>
+          <section class="panel">
+            <h2>Review details</h2>
+            <div id="review-detail">
+              <p class="empty">
+                Select a request to inspect its action, cost, deadline, and
+                reason.
+              </p>
+            </div>
+            <div id="review-controls" hidden>
+              <button id="approve">Approve exact action</button
+              ><button id="reject" class="secondary danger">
+                Reject request
+              </button>
+            </div>
+            <button id="execute-approved" hidden>
+              Retry inspected action as agent
+            </button>
+          </section>
+        </div>
+      </section>
+      <section id="audit-view" class="view" hidden>
+        <div class="intro">
+          <h2>A record of every boundary.</h2>
+          <p>Inspect decisions and mission changes in the local audit trail.</p>
+        </div>
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Activity log</h2>
+            <div>
+              <button id="integrity" class="secondary" data-connected>
+                Verify local chain</button
+              ><button id="refresh-audit" class="text-button" data-connected>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <p class="hint">
+            Oldest first, 25 entries per page. Chain verification checks local
+            consistency, not independent proof of history.
+          </p>
+          <div id="audit-list" class="stack">
+            <p class="empty">Connect your workspace to view activity.</p>
+          </div>
+          <button id="more-audit" class="secondary" hidden>
+            Load more events
+          </button>
+        </section>
+      </section>
+      <footer>
+        AgentVisa <span>Limited authority. Explicit decisions.</span
+        ><a href="/docs" target="_blank" rel="noopener">API reference ↗</a>
+      </footer>
+    </main>
+  </body>
+</html>
