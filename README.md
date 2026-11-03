@@ -87,6 +87,10 @@ See [audit exports and independently held checkpoints](docs/audit-exports.md) fo
 
 The [agent example](examples/agent_client.py) requires an explicit request ID and supports read-only status recovery; see the [API walkthrough](docs/api.md) for commands.
 
+## Hosting
+
+The [Render deployment guide](docs/hosting.md) covers the dashboard and API on a single instance with a persistent disk and separate hosted credentials. Review provider costs before deployment.
+
 ## Build and verify the package
 
 ```sh

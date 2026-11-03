@@ -1,0 +1,36 @@
+import pytest
+from fastapi.testclient import TestClient
+from agentvisa.hosted import create_hosted_app
+
+
+def configure(monkeypatch, path):
+    monkeypatch.setenv('AGENTVISA_ADMIN_TOKEN', 'a' * 40)
+    monkeypatch.setenv('AGENTVISA_AGENT_TOKEN', 'b' * 40)
+    monkeypatch.setenv('AGENTVISA_DB', str(path))
+
+
+def test_hosted_restart_preserves_state_and_roles(monkeypatch, tmp_path):
+    path = tmp_path / 'state.db'
+    configure(monkeypatch, path)
+    human = {'Authorization': 'Bearer ' + 'a' * 40}
+    machine = {'Authorization': 'Bearer ' + 'b' * 40}
+    with TestClient(create_hosted_app()) as client:
+        assert client.get('/').status_code == 200
+        assert client.get('/visas').status_code == 401
+        assert client.get('/visas', headers=machine).status_code == 403
+        contract = client.post('/drafts', headers=human, json={'agent_id':'procurement','mission':'Buy a monitor under $300.'}).json()['contract']
+        visa = client.post('/visas', headers=human, json=contract).json()['visa_id']
+    with TestClient(create_hosted_app()) as client:
+        assert client.get('/visas', headers=human).json()['items'][0]['id'] == visa
+        assert client.get('/health').json()['status'] == 'ok'
+    assert path.stat().st_mode & 0o777 == 0o600
+
+
+@pytest.mark.parametrize('key,value', [('AGENTVISA_ADMIN_TOKEN',''),('AGENTVISA_AGENT_TOKEN','short'),('AGENTVISA_AGENT_TOKEN','a'*40),('AGENTVISA_DB','relative.db'),('AGENTVISA_DB','')])
+def test_hosted_rejects_incomplete_configuration(monkeypatch, tmp_path, key, value):
+    path = tmp_path / 'state.db'
+    configure(monkeypatch, path)
+    monkeypatch.setenv(key, value)
+    with pytest.raises(RuntimeError):
+        create_hosted_app()
+    assert not path.exists()
