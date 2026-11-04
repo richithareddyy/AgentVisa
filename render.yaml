@@ -2,7 +2,7 @@ services:
   - type: web
     name: agentvisa
     runtime: python
-    plan: starter
+    plan: free
     region: oregon
     buildCommand: python -m pip install . -c requirements.lock
     startCommand: python -m uvicorn agentvisa.hosted:create_hosted_app --factory --host 0.0.0.0 --port $PORT --workers 1 --no-access-log
@@ -16,8 +16,4 @@ services:
       - key: AGENTVISA_AGENT_TOKEN
         generateValue: true
       - key: AGENTVISA_DB
-        value: /var/data/agentvisa.db
-    disk:
-      name: agentvisa-data
-      mountPath: /var/data
-      sizeGB: 1
+        value: /tmp/agentvisa.db

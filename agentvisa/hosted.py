@@ -13,5 +13,7 @@ def create_hosted_app():
         raise RuntimeError("Set distinct administrator and agent secrets of at least 32 characters")
     path = Path(database)
     if not database or not path.is_absolute() or not path.parent.is_dir():
-        raise RuntimeError("AGENTVISA_DB must be an absolute path inside an existing persistent directory")
-    return create_app(Gateway(str(path)), admin, {agent: "procurement"})
+        raise RuntimeError("AGENTVISA_DB must be an absolute path inside an existing directory")
+    app = create_app(Gateway(str(path)), admin, {agent: "procurement"})
+    app.state.hosted_demo = True
+    return app

@@ -14,8 +14,12 @@ HEADERS = {
 
 def install_dashboard(app):
     def asset(name, media_type):
-        return Response(files("agentvisa").joinpath("web", name).read_bytes(),
-                        media_type=media_type, headers=HEADERS)
+        content = files("agentvisa").joinpath("web", name).read_bytes()
+        if name == "index.html" and getattr(app.state, "hosted_demo", False):
+            content = content.replace(b"LOCAL WORKSPACE", b"HOSTED DEMO")
+            content = content.replace(b"Connect your local workspace", b"Connect your hosted workspace")
+            content = content.replace(b"<main>", b'<main><section class="panel" aria-label="Demo storage"><strong>Temporary demo workspace</strong><p>On free hosting, missions, spending records, approvals, and audit history can reset when the service restarts or redeploys. Use sample data only. All actions are simulated.</p></section>')
+        return Response(content, media_type=media_type, headers=HEADERS)
 
     @app.get("/", include_in_schema=False)
     def dashboard():

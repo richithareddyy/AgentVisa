@@ -1,15 +1,15 @@
-# Render deployment
+# Free Render deployment
 
-The Render Blueprint (`render.yaml`) runs the complete dashboard and Python API on one paid web-service instance with a 1 GB persistent disk, Python 3.14.8 and one Uvicorn worker. Review Render's displayed price before creating it. The configuration file alone does not deploy or incur charges.
+The Render Blueprint (`render.yaml`) runs the dashboard and Python API on one free web-service instance, with Python 3.14.8 and one Uvicorn worker. It has no paid disk. Automatic deploys are disabled; releases require manual deployment.
 
-Connect this private GitHub repository in Render, create a Blueprint from `main`, review the resource plan, and deploy after approving its cost. Automatic deploys are disabled; subsequent releases require deliberate manual deployment.
+Connect the AgentVisa repository in Render and deploy `main` using the free plan. Build with `python -m pip install . -c requirements.lock`. Start with `python -m uvicorn agentvisa.hosted:create_hosted_app --factory --host 0.0.0.0 --port $PORT --workers 1 --no-access-log`. Set the health check to `/health`.
 
-Render generates separate `AGENTVISA_ADMIN_TOKEN` and `AGENTVISA_AGENT_TOKEN` environment secrets. The agent identity is `procurement`. The database path is `/var/data/agentvisa.db` on the mounted disk. Do not reuse or upload the laptop's private configuration, credentials, or database. The hosted workspace starts empty.
+Set `PYTHON_VERSION=3.14.8`, `AGENTVISA_DB=/tmp/agentvisa.db`, and separate random `AGENTVISA_ADMIN_TOKEN` and `AGENTVISA_AGENT_TOKEN` secrets of at least 32 characters each. The Blueprint can generate these secrets. Do not upload laptop credentials or databases.
 
-Open the Render HTTPS URL and choose **Connect with credentials instead**. Use the two hosted secrets from Render's environment settings, with agent identity `procurement`. Keep these secrets private; the dashboard shell is public, but mission data and operations require credentials. Never place secrets in source control, URLs, screenshots or messages. An autonomous agent receives only its agent credential.
+Open the Render HTTPS URL, choose **Connect with credentials instead**, and use the hosted secrets from Render environment settings with agent identity `procurement`. The dashboard shell is public; mission data and operations require credentials. Keep secrets out of source control, URLs, screenshots, and messages. Give an autonomous agent only its agent credential.
 
-Verify `/health`, unauthenticated denial on `/visas`, mission creation and the human-review flow after deployment. Verify the same mission survives a service restart. Disk attachment must be present: an absolute path alone does not establish persistent storage. Do not use free ephemeral storage for durable budgets or audit history.
+Free hosting has ephemeral storage. Missions, budgets, approvals, and audit history can disappear on restart or redeployment. The dashboard displays this limitation. Free instances also spin down during inactivity, so opening the site can take longer. Use sample data only; this deployment is unsuitable for durable spending enforcement or audit retention.
 
-This remains a single-administrator simulation prototype. Hosting does not add multi-user identity, real purchases or independent audit anchoring. Keep deployment access limited to trusted operators, monitor storage usage, and export audit checkpoints separately. Deleting the service or disk can lose stored state; review Render's retention policies before deletion.
+Verify `/health`, unauthenticated denial on `/visas`, mission creation, and the human-review flow after deployment. This remains a single-administrator simulation prototype, without real purchases or multi-user identity.
 
-Provider references: [Blueprint configuration](https://render.com/docs/blueprint-spec), [persistent disks](https://render.com/docs/disks), [Python versions](https://render.com/docs/python-version).
+Provider references: [Blueprint configuration](https://render.com/docs/blueprint-spec), [persistent disks](https://render.com/docs/disks), [free services](https://render.com/docs/free).

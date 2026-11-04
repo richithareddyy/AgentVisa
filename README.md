@@ -89,7 +89,7 @@ The [agent example](examples/agent_client.py) requires an explicit request ID an
 
 ## Hosting
 
-The [Render deployment guide](docs/hosting.md) covers the dashboard and API on a single instance with a persistent disk and separate hosted credentials. Review provider costs before deployment.
+The [Render deployment guide](docs/hosting.md) covers the dashboard and API on a free instance with separate hosted credentials. Demo data is temporary and can reset on restart or redeployment.
 
 ## Build and verify the package
 
