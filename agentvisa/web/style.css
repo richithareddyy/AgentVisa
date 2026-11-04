@@ -492,3 +492,8 @@ body[data-hosted="true"] .hosted-only { display: block; }
   .how-it-works { grid-template-columns: 1fr; gap: 14px; }
   #sandbox-tour button { display: block; margin: 10px 0 0; width: 100%; }
 }
+
+@media (max-width: 650px) {
+  header { flex-wrap: wrap; gap: 10px; }
+  header > div { flex-basis: 100%; }
+}

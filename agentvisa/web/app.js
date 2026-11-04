@@ -170,6 +170,7 @@ function view(name) {
   $("welcome").hidden = !!session || name !== "missions";
   if (document.body.dataset.hosted === "true") $("connection").hidden = true;
   $("page-title").textContent = titles[name];
+  $("page-title").scrollIntoView({ block: "start" });
 }
 document
   .querySelectorAll(".nav")
