@@ -3,11 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>AgentVisa · Mission control</title>
+    <title>AgentVisa · Give agents limited authority</title>
+    <meta name="description" content="Give AI agents a spending visa with a budget, human approval, revocation, and an audit trail. Try an isolated sandbox with simulated purchases." />
+    <meta property="og:title" content="AgentVisa · Limited authority. Explicit decisions." />
+    <meta property="og:description" content="Try a purchase, see it blocked, and approve a request in a free, isolated sandbox. No account or real money needed." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/dashboard/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/dashboard/style.css" />
     <script src="/dashboard/app.js" defer></script>
   </head>
-  <body>
+  <body data-hosted="false">
     <aside class="sidebar">
       <a class="brand" href="/" aria-label="AgentVisa home"
         ><span class="mark">V</span>AgentVisa</a
@@ -15,12 +20,12 @@
       <div class="workspace">LOCAL WORKSPACE</div>
       <nav aria-label="Main navigation">
         <button class="nav active" data-view="missions">
-          01 <span>Missions</span></button
+          <span>Missions</span></button
         ><button class="nav" data-view="actions">
-          02 <span>Try an action</span></button
+          <span>Try an action</span></button
         ><button class="nav" data-view="approvals">
-          03 <span>Human review</span></button
-        ><button class="nav" data-view="audit">04 <span>Activity</span></button>
+          <span>Approvals</span></button
+        ><button class="nav" data-view="audit"><span>Activity</span></button>
       </nav>
       <div class="sidebar-note">
         <span class="dot"></span> Simulation mode
@@ -33,9 +38,28 @@
           <div class="eyebrow">AUTHORITY, WITH BOUNDARIES</div>
           <h1 id="page-title">Mission control</h1>
         </div>
-        <button id="session-toggle" class="secondary">Connect workspace</button>
+        <button id="sandbox-shortcut" class="hosted-only">Try sandbox</button>
+        <button id="session-toggle" class="secondary">Owner sign-in</button>
       </header>
       <div id="notice" role="status" aria-live="polite" hidden></div>
+      <section id="welcome" class="panel hero hosted-only">
+        <span class="step">MEET AGENTVISA</span>
+        <h2>Give your agent a budget.<br />Keep the final say.</h2>
+        <p>Give AI agents a spending visa with a budget, a human-approval threshold, revocation, and an audit trail.</p>
+        <button id="start-sandbox">Try the sandbox →</button>
+        <p class="hint">No sign-up or tokens. Your own temporary workspace. No real purchases.</p>
+        <ol class="how-it-works">
+          <li><strong>Set the limits</strong><span>A $300 budget. Ask you above $250.</span></li>
+          <li><strong>Watch a boundary hold</strong><span>A $450 purchase is blocked.</span></li>
+          <li><strong>Make the call</strong><span>Review a $275 purchase, then run it.</span></li>
+        </ol>
+      </section>
+      <section id="next-step" class="panel guide" aria-label="Getting started">
+        <span class="step">NEXT STEP</span>
+        <h2 id="guide-title">1. Connect your workspace</h2>
+        <p id="guide-text">Connect once, set a spending limit, then see which actions are allowed or need your approval.</p>
+        <button id="guide-next">Show connection options</button>
+      </section>
       <section id="connection" class="panel">
         <div class="section-heading">
           <div>
@@ -45,8 +69,9 @@
               started.
             </p>
           </div>
-          <span class="tag">ON THIS DEVICE</span>
+          <span class="tag local-only">ON THIS DEVICE</span>
         </div>
+        <div class="local-only">
         <label class="file-label"
           >Choose configuration file<input
             id="config-file"
@@ -56,11 +81,16 @@
         <p class="hint">
           Select <code>.agentvisa.local.json</code> inside your AgentVisa
           folder. In the Mac file picker, press Command + Shift + . to show
-          hidden files. The file is read locally; credentials stay in this
+          hidden files. On Windows, enable View → Show → Hidden items; on Linux, press Ctrl + H. The file is read locally; credentials stay in this
           page’s memory until you disconnect or reload.
         </p>
-        <details>
-          <summary>Connect with credentials instead</summary>
+        </div>
+        <div class="hosted-only">
+          <p>Open your AgentVisa service in Render → Environment. Copy each secret into its matching field below. These are the two secrets you generated when deploying.</p>
+          <p class="hint">Use AGENTVISA_ADMIN_TOKEN for the administrator and AGENTVISA_AGENT_TOKEN for the agent. Keep both private. You will need to reconnect after reloading this page.</p>
+        </div>
+        <details id="manual-connection">
+          <summary>Use owner credentials</summary>
           <form id="connect-form" class="form-grid">
             <label
               >Administrator token<input
@@ -98,8 +128,9 @@
         <div class="columns">
           <section class="panel">
             <span class="step">01 / DEFINE AUTHORITY</span>
-            <h2>Create a monitor mission</h2>
-            <p>This prototype supports monitor procurement in USD.</p>
+            <h2>Set a computer-monitor budget</h2>
+            <p>Try this example: let an agent buy a monitor with a $300 budget. Purchases over $250 need your approval. No real money is spent.</p>
+            <p id="mission-connect-hint" class="hint">Start the sandbox or connect your workspace to enable this form.</p>
             <form id="mission-form">
               <label
                 >Total budget ($)<input
@@ -122,13 +153,13 @@
               ><button type="submit" data-connected>Preview mission</button>
             </form>
             <div id="draft-panel" hidden>
-              <h3>Review before issuing</h3>
+              <h3>Review your limits</h3>
               <p id="draft-summary"></p>
               <details>
                 <summary>Full contract and permissions</summary>
                 <pre id="draft-json"></pre>
               </details>
-              <button id="issue" data-connected>Issue this mission</button>
+              <button id="issue" data-connected>Create mission and continue</button>
             </div>
           </section>
           <section class="panel">
@@ -139,7 +170,7 @@
               </button>
             </div>
             <p class="hint">
-              Select a mission to see its inherited limits or try actions. Lists
+              Select a mission to see its spending limits or try actions. Lists
               show oldest first.
             </p>
             <div id="mission-list" class="stack">
@@ -154,7 +185,7 @@
           <h2>Mission boundaries</h2>
           <div id="visa-summary" class="metrics"></div>
           <details>
-            <summary>Full authority chain</summary>
+            <summary>Detailed permissions</summary>
             <pre id="visa-json"></pre>
           </details>
           <button id="use-visa">Try an action with this mission</button
@@ -162,6 +193,14 @@
         </section>
       </section>
       <section id="actions-view" class="view" hidden>
+        <section id="sandbox-tour" class="panel" hidden>
+          <span class="step">YOUR 30-SECOND DEMO</span>
+          <h2>A $450 purchase is blocked. What about $275?</h2>
+          <p>Your sample mission has a $300 budget and asks for your approval above $250. We have queued a $275 purchase for you to review.</p>
+          <button id="sandbox-review">Review the $275 purchase →</button>
+          <button id="sandbox-block" class="secondary">Try the blocked $450 purchase</button>
+          <p class="hint">Approval cannot override the $300 budget. After approval, choose “Run approved action” to simulate the purchase.</p>
+        </section>
         <div class="intro">
           <h2>See where authority stops.</h2>
           <p>
@@ -191,7 +230,7 @@
                 </select></label
               >
               <p id="scenario-hint" class="hint"></p>
-              <button type="submit" data-connected>Submit new action</button>
+              <button type="submit" data-connected>Try this action</button>
             </form>
             <p class="hint">
               Each new proposal gets its own request ID. To recover an uncertain
@@ -246,13 +285,13 @@
               </p>
             </div>
             <div id="review-controls" hidden>
-              <button id="approve">Approve exact action</button
+              <button id="approve">Approve this action</button
               ><button id="reject" class="secondary danger">
                 Reject request
               </button>
             </div>
             <button id="execute-approved" hidden>
-              Retry inspected action as agent
+              Run approved action
             </button>
           </section>
         </div>
@@ -267,15 +306,14 @@
             <h2>Activity log</h2>
             <div>
               <button id="integrity" class="secondary" data-connected>
-                Verify local chain</button
+                Check audit integrity</button
               ><button id="refresh-audit" class="text-button" data-connected>
                 Refresh
               </button>
             </div>
           </div>
           <p class="hint">
-            Oldest first, 25 entries per page. Chain verification checks local
-            consistency, not independent proof of history.
+            Oldest first, 25 entries per page. Integrity checks detect changes within this stored history. External verification requires a separately saved checkpoint.
           </p>
           <div id="audit-list" class="stack">
             <p class="empty">Connect your workspace to view activity.</p>
@@ -285,6 +323,7 @@
           </button>
         </section>
       </section>
+      <p class="hint hosted-only storage-note">Temporary demo: sandboxes expire after 15 minutes. Free hosting may wake slowly, and stored data can reset after restarts or redeployments. Use sample data only.</p>
       <footer>
         AgentVisa <span>Limited authority. Explicit decisions.</span
         ><a href="/docs" target="_blank" rel="noopener">API reference ↗</a>

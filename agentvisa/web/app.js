@@ -2,7 +2,8 @@
 const $ = (id) => document.getElementById(id),
   visas = new Map(),
   pages = {};
-let session = null,
+let sandboxVisa = null,
+  session = null,
   draft = null,
   selectedVisa = null,
   lastRequest = null,
@@ -31,6 +32,44 @@ function notice(text, error = false) {
   $("notice").className = error ? "error" : "";
   $("notice").hidden = false;
 }
+
+function updateGuide() {
+  const connected = !!session;
+  $("sandbox-shortcut").hidden = connected;
+  const ready = connected && !!selectedVisa;
+  $("next-step").hidden = !!session?.sandbox || (document.body.dataset.hosted === "true" && !connected);
+  $("mission-connect-hint").hidden = connected;
+  if (session?.sandbox) {
+    $("guide-title").textContent = "Your sandbox is ready";
+    $("guide-text").textContent = "Explore the sample mission, review a purchase, or create your own spending limits. Nothing spends real money. This workspace lasts 15 minutes.";
+    $("guide-next").textContent = "Try an action";
+    return;
+  }
+  $("guide-title").textContent = !connected ? "1. Connect your workspace" : ready ? "3. Try an action" : "2. Set your agent’s limits";
+  $("guide-text").textContent = !connected
+    ? "Connect once, set a spending limit, then see which actions are allowed or need your approval."
+    : ready ? "Start with a catalog search. Then try a $275 monitor to see human review, or a $450 monitor to test the budget limit. Purchases use your remaining budget."
+    : "The example is ready: a $300 monitor budget, with approval above $250. Preview the limits, then create your mission.";
+  $("guide-next").textContent = !connected ? "Show connection options" : ready ? "Choose an action" : "Set up my mission";
+}
+$("guide-next").addEventListener("click", () => {
+  if (!session) {
+    $("connection").hidden = false;
+    $("connection").scrollIntoView({ behavior: "smooth", block: "start" });
+  } else if (selectedVisa) {
+    $("action-visa").value = selectedVisa;
+    view("actions");
+    $("scenario").focus();
+  } else {
+    view("missions");
+    $("budget").focus();
+  }
+});
+if (document.body.dataset.hosted === "true") {
+  $("manual-connection").open = true;
+  $("connection").hidden = true;
+}
+
 function controls() {
   document
     .querySelectorAll("button")
@@ -39,6 +78,7 @@ function controls() {
         (b.disabled = busy || (b.hasAttribute("data-connected") && !session)),
     );
   $("issue").disabled = busy || !session || !draft;
+  updateGuide();
 }
 async function run(fn) {
   if (busy) return;
@@ -73,10 +113,11 @@ async function api(
   if (!session) throw Error("Connect your workspace first.");
   let r;
   try {
-    r = await fetch(path, {
+    r = await fetch((session.sandbox ? "/sandbox/api" : "") + path, {
       method,
       headers: {
         Authorization: "Bearer " + session[role],
+        ...(session.sandbox ? { "X-Sandbox-ID": session.sandbox } : {}),
         ...(body ? { "Content-Type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -121,14 +162,21 @@ function view(name) {
     .forEach((e) => (e.hidden = e.id !== name + "-view"));
   document
     .querySelectorAll(".nav")
-    .forEach((e) => e.classList.toggle("active", e.dataset.view === name));
+    .forEach((e) => {
+      e.classList.toggle("active", e.dataset.view === name);
+      if (e.dataset.view === name) e.setAttribute("aria-current", "page");
+      else e.removeAttribute("aria-current");
+    });
+  $("welcome").hidden = !!session || name !== "missions";
+  if (document.body.dataset.hosted === "true") $("connection").hidden = true;
   $("page-title").textContent = titles[name];
 }
 document
   .querySelectorAll(".nav")
   .forEach((e) => e.addEventListener("click", () => view(e.dataset.view)));
 function clear() {
-  session = draft = selectedVisa = lastRequest = inspected = imported = null;
+  session = draft = selectedVisa = lastRequest = inspected = imported = sandboxVisa = null;
+  $("sandbox-tour").hidden = true;
   visas.clear();
   Object.keys(pages).forEach((k) => delete pages[k]);
   [
@@ -164,10 +212,11 @@ function clear() {
   ["missions", "approvals", "audit"].forEach(
     (k) => ($("more-" + k).hidden = true),
   );
-  $("connection").hidden = false;
-  $("session-toggle").textContent = "Connect workspace";
+  $("connection").hidden = document.body.dataset.hosted === "true";
+  $("session-toggle").textContent = document.body.dataset.hosted === "true" ? "Owner sign-in" : "Connect workspace";
+  view("missions");
 }
-async function connect(admin, agent, identity) {
+async function connect(admin, agent, identity, sandbox = null) {
   if (
     typeof admin !== "string" ||
     typeof agent !== "string" ||
@@ -180,7 +229,7 @@ async function connect(admin, agent, identity) {
       "Separate administrator and agent credentials and an agent identity are required.",
     );
   clear();
-  session = { admin, agent, identity };
+  session = { admin, agent, identity, sandbox };
   try {
     await api(
       "/requests/status?request_id=" + crypto.randomUUID(),
@@ -195,7 +244,8 @@ async function connect(admin, agent, identity) {
     throw e;
   }
   $("connection").hidden = true;
-  $("session-toggle").textContent = "Disconnect";
+  $("session-toggle").textContent = sandbox ? "Exit sandbox" : "Disconnect";
+  $("welcome").hidden = true;
   $("decision").replaceChildren(
     el("p", "Submit an action to see its decision and explanation.", "empty"),
   );
@@ -203,7 +253,7 @@ async function connect(admin, agent, identity) {
     el("p", "Select a request to inspect its exact action.", "empty"),
   );
   notice(
-    "Connected as human operator · agent " +
+    sandbox ? "Your private sandbox is ready. All purchases are simulated." : "Connected as human operator · agent " +
       identity +
       ". Credentials stay only in this page.",
   );
@@ -213,7 +263,10 @@ bind("session-toggle", "click", () => {
   if (session) {
     clear();
     notice("Disconnected. Credentials and displayed records cleared.");
-  } else $("connection").hidden = !$("connection").hidden;
+  } else {
+    $("connection").hidden = !$("connection").hidden;
+    if (!$("connection").hidden) $("connection").scrollIntoView({ behavior: "smooth" });
+  }
 });
 bind("connect-form", "submit", () =>
   connect(
@@ -430,7 +483,9 @@ bind("issue", "click", async () => {
     visas.set(r.visa_id, data.chain[0]);
   }
   $("action-visa").value = r.visa_id;
-  notice("Mission issued. Try an action to test its boundaries.");
+  view("actions");
+  $("scenario").focus();
+  notice("Mission created. Start with a catalog search, then try a purchase.");
   await load("audit");
 });
 async function inspectVisa(id) {
@@ -544,7 +599,9 @@ function decision(r) {
           : "No action executed",
       "decision-title",
     ),
-    el("p", r.reason),
+    el("p", r.decision === "DENY" && r.reason.includes("cumulative_budget")
+      ? "This purchase exceeds the mission’s remaining budget. Approval cannot override that limit."
+      : r.reason),
   );
   if (r.cost_cents !== undefined)
     e.append(
@@ -557,8 +614,12 @@ function decision(r) {
     );
   e.append(details(r));
   if (r.decision === "ASK_HUMAN") {
-    const b = el("button", "Go to human review", "secondary");
-    b.addEventListener("click", () => view("approvals"));
+    const b = el("button", "Review this action", "secondary");
+    const pending = lastRequest && structuredClone(lastRequest);
+    b.addEventListener("click", () => run(async () => {
+      view("approvals");
+      if (pending) await inspectReview(session.identity, pending.request_id);
+    }));
     e.append(b);
   }
 }
@@ -574,6 +635,8 @@ async function execute(body) {
   );
   const r = await api("/execute", "agent", "POST", body);
   decision(r);
+  if (session.sandbox && body.request_id === "sample-review" && r.executed) $("sandbox-tour").hidden = true;
+  await load("missions");
   notice(
     r.replayed
       ? "Stored result replayed; no new effect."
@@ -639,8 +702,10 @@ async function inspectReview(agent, id) {
       "Review deadline: " + stamp(d.deadline) + (d.expired ? " · EXPIRED" : ""),
     ),
     el("h3", "Exact proposed action"),
-    el("pre", JSON.stringify(d.action, null, 2)),
-    el("p", "Action fingerprint: " + d.fingerprint, "hint"),
+    el("p", d.action.tool === "purchase"
+      ? "Buy " + d.action.arguments.quantity + " × " + ({"monitor-pro": "productivity computer monitor", "monitor-basic": "office computer monitor", "monitor-ultra": "studio computer monitor"}[d.action.arguments.product_id] || d.action.arguments.product_id) + " from the approved vendor."
+      : d.action.tool.replaceAll("_", " ") + " · " + d.action.resource),
+    details({ action: d.action, fingerprint: d.fingerprint }, "Exact request and fingerprint"),
     details(d, "Policy and intent checks"),
   );
   $("review-controls").hidden = d.expired || d.approval_status !== "pending";
@@ -661,7 +726,7 @@ async function review(approve) {
   });
   notice(
     approve
-      ? "Approved. Retry the inspected action to execute under current policy."
+      ? "Approved. Choose Run approved action to simulate this purchase. Limits are checked again before it runs."
       : "Request rejected. No action was executed.",
   );
   if (approve) await inspectReview(d.agent, d.request_id);
@@ -688,5 +753,31 @@ bind("integrity", "click", async () => {
     !r.valid,
   );
 });
+$("sandbox-shortcut").addEventListener("click", () => $("start-sandbox").click());
+bind("start-sandbox", "click", async () => {
+  $("start-sandbox").textContent = "Preparing your sandbox…";
+  try {
+    const response = await fetch("/sandbox/start", { method: "POST", credentials: "omit", redirect: "error", cache: "no-store", signal: AbortSignal.timeout(60000) });
+    const data = await response.json();
+    if (!response.ok) throw Error(data.detail || "Sandbox could not start. Please try again.");
+    await connect(data.admin, data.agent, data.identity, data.workspace);
+    sandboxVisa = data.visa_id;
+    selectedVisa = data.visa_id;
+    $("action-visa").value = data.visa_id;
+    $("sandbox-tour").hidden = false;
+    view("actions");
+    decision(data.blocked);
+  } finally {
+    $("start-sandbox").textContent = "Try the sandbox →";
+  }
+});
+bind("sandbox-review", "click", async () => {
+  view("approvals");
+  await inspectReview(session.identity, "sample-review");
+});
+bind("sandbox-block", "click", async () => {
+  await execute({ request_id: crypto.randomUUID(), visa_id: sandboxVisa, tool: "purchase", resource: "vendor:approved", arguments: { product_id: "monitor-ultra", quantity: 1 }, context: "" });
+});
+view("missions");
 window.addEventListener("pagehide", clear);
 controls();

@@ -16,4 +16,6 @@ def create_hosted_app():
         raise RuntimeError("AGENTVISA_DB must be an absolute path inside an existing directory")
     app = create_app(Gateway(str(path)), admin, {agent: "procurement"})
     app.state.hosted_demo = True
+    from .sandbox import Sandbox
+    app.mount("/sandbox", Sandbox())
     return app

@@ -472,3 +472,23 @@ footer span {
     padding: 18px;
   }
 }
+
+.hosted-only { display: none; }
+body[data-hosted="true"] .local-only { display: none; }
+body[data-hosted="true"] .hosted-only { display: block; }
+.guide { border-left: 4px solid #23755b; }
+.guide h2 { margin-top: 10px; }
+
+[hidden] { display: none !important; }
+.hero h2 { font-size: clamp(28px, 4vw, 48px); line-height: 1.12; margin: 16px 0; letter-spacing: -1px; }
+.hero > p { max-width: 640px; }
+.how-it-works { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 22px 0 0 22px; }
+.how-it-works li { padding-left: 4px; }
+.how-it-works strong, .how-it-works span { display: block; }
+.how-it-works span { color: var(--muted); font-size: 13px; margin-top: 6px; }
+.nav[aria-current="page"] { box-shadow: inset 3px 0 #c3e3a5; }
+.storage-note { margin-top: 32px; max-width: 780px; }
+@media (max-width: 650px) {
+  .how-it-works { grid-template-columns: 1fr; gap: 14px; }
+  #sandbox-tour button { display: block; margin: 10px 0 0; width: 100%; }
+}

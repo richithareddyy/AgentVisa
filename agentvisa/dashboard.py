@@ -16,9 +16,10 @@ def install_dashboard(app):
     def asset(name, media_type):
         content = files("agentvisa").joinpath("web", name).read_bytes()
         if name == "index.html" and getattr(app.state, "hosted_demo", False):
+            content = content.replace(b'data-hosted="false"', b'data-hosted="true"')
             content = content.replace(b"LOCAL WORKSPACE", b"HOSTED DEMO")
             content = content.replace(b"Connect your local workspace", b"Connect your hosted workspace")
-            content = content.replace(b"<main>", b'<main><section class="panel" aria-label="Demo storage"><strong>Temporary demo workspace</strong><p>On free hosting, missions, spending records, approvals, and audit history can reset when the service restarts or redeploys. Use sample data only. All actions are simulated.</p></section>')
+            content = content.replace(b"Choose the private configuration created by AgentVisa to get\n              started.", b"Enter your two hosted access tokens below to connect securely.")
         return Response(content, media_type=media_type, headers=HEADERS)
 
     @app.get("/", include_in_schema=False)
@@ -27,7 +28,7 @@ def install_dashboard(app):
 
     @app.get("/dashboard/{name}", include_in_schema=False)
     def dashboard_asset(name: str):
-        allowed = {"app.js": "text/javascript", "style.css": "text/css"}
+        allowed = {"app.js": "text/javascript", "style.css": "text/css", "favicon.svg": "image/svg+xml"}
         if name not in allowed:
             raise HTTPException(404, "asset not found")
         return asset(name, allowed[name])

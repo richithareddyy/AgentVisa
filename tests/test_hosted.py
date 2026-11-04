@@ -42,7 +42,7 @@ def test_hosted_dashboard_discloses_temporary_storage(monkeypatch, tmp_path):
     monkeypatch.setenv("AGENTVISA_DB", str(tmp_path / "demo.db"))
     with TestClient(create_hosted_app()) as client:
         page = client.get("/")
-        assert "Temporary demo workspace" in page.text
+        assert "Temporary demo:" in page.text
         assert "HOSTED DEMO" in page.text
         assert "a" * 40 not in page.text
         assert "b" * 40 not in page.text

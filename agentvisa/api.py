@@ -115,13 +115,17 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
 
     def admin(value: str = Depends(token)):
         if not hmac.compare_digest(value.encode(), admin_token.encode()):
-            raise HTTPException(403, "human administrator credential required")
+            if any(hmac.compare_digest(value.encode(), secret.encode()) for secret in agent_tokens):
+                raise HTTPException(403, "human administrator credential required")
+            raise HTTPException(401, "invalid credential")
 
     def agent(value: str = Depends(token)) -> str:
         for secret, identity in agent_tokens.items():
             if hmac.compare_digest(value.encode(), secret.encode()):
                 return identity
-        raise HTTPException(403, "unknown agent credential")
+        if hmac.compare_digest(value.encode(), admin_token.encode()):
+            raise HTTPException(403, "agent credential required")
+        raise HTTPException(401, "invalid credential")
 
     @app.exception_handler(ValueError)
     @app.exception_handler(TypeError)

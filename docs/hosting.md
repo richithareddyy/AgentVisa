@@ -13,3 +13,11 @@ Free hosting has ephemeral storage. Missions, budgets, approvals, and audit hist
 Verify `/health`, unauthenticated denial on `/visas`, mission creation, and the human-review flow after deployment. This remains a single-administrator simulation prototype, without real purchases or multi-user identity.
 
 Provider references: [Blueprint configuration](https://render.com/docs/blueprint-spec), [persistent disks](https://render.com/docs/disks), [free services](https://render.com/docs/free).
+
+## Public visitor sandbox
+
+Visitors choose **Try the sandbox** without supplying owner credentials. Each sandbox receives its own temporary SQLite database and independently generated administrator and agent capabilities, held only in page memory. These capabilities cannot access the owner API or another sandbox. The demo seeds a $300 computer-monitor mission, a blocked $450 purchase, and a $275 request awaiting approval. Approval and execution remain separate steps through the existing gateway.
+
+Sandboxes expire after 15 minutes. Expired directories are removed on subsequent sandbox traffic when no request is using them. One process permits at most 24 simultaneous workspaces, 12 starts per minute globally, and 200 API calls per workspace. The global limits bound demo storage but can also make the demo temporarily busy; this is not a production anti-abuse service. Restarting the service clears sandbox access. Run only one worker as configured.
+
+Owner credentials are available under **Owner sign-in**. Public access never disables authentication on the owner API. Unknown tokens return 401; recognized tokens used in the wrong role return 403.
