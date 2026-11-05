@@ -20,8 +20,15 @@ def test_seeded_demo_and_review_execute_once():
     assert response.status_code == 201
     assert response.headers['cache-control'] == 'no-store'
     data = response.json()
-    assert data['blocked']['decision'] == 'DENY'
-    assert data['pending']['decision'] == 'ASK_HUMAN'
+    assert client.get('/sandbox/api/approvals', headers=headers(data)).json()['items'] == []
+    action = dict(request_id='sample-blocked', visa_id=data['visa_id'], tool='purchase', resource='vendor:approved', arguments={'product_id':'monitor-ultra', 'quantity':1})
+    blocked = client.post('/sandbox/api/execute', headers=headers(data, 'agent'), json=action).json()
+    assert blocked['decision'] == 'DENY'
+    assert blocked['remaining_budget_cents'] == 30000
+    action.update(request_id='sample-review', arguments={'product_id':'monitor-pro', 'quantity':1})
+    pending = client.post('/sandbox/api/execute', headers=headers(data, 'agent'), json=action).json()
+    assert pending['decision'] == 'ASK_HUMAN'
+    assert pending['remaining_budget_cents'] == 30000
     assert client.get('/sandbox/api/visas', headers=headers(data)).json()['items'][0]['spent'] == 0
     review = client.get('/sandbox/api/approvals/inspect?agent=procurement&request_id=sample-review', headers=headers(data)).json()
     body = dict(agent_id='procurement', request_id='sample-review', approve=True, expected_fingerprint=review['fingerprint'])
@@ -30,8 +37,14 @@ def test_seeded_demo_and_review_execute_once():
     assert client.get('/sandbox/api/visas', headers=headers(data)).json()['items'][0]['spent'] == 0
     result = client.post('/sandbox/api/execute', headers=headers(data, 'agent'), json=review['action'])
     assert result.json()['executed']
+    assert result.json()['remaining_budget_cents'] == 2500
     assert client.post('/sandbox/api/execute', headers=headers(data, 'agent'), json=review['action']).json()['replayed']
     assert client.get('/sandbox/api/visas', headers=headers(data)).json()['items'][0]['spent'] == 27500
+    action.update(request_id='over-budget', arguments={'product_id':'monitor-basic', 'quantity':1})
+    denied = client.post('/sandbox/api/execute', headers=headers(data, 'agent'), json=action).json()
+    assert denied['decision'] == 'DENY'
+    assert denied['remaining_budget_cents'] == 2500
+    assert denied['cost_cents'] == 18000
     for workspace in manager.workspaces.values():
         workspace.directory.cleanup()
 

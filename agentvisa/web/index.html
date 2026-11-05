@@ -8,8 +8,14 @@
     <meta property="og:title" content="AgentVisa · Limited authority. Explicit decisions." />
     <meta property="og:description" content="Try a purchase, see it blocked, and approve a request in a free, isolated sandbox. No account or real money needed." />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://agentvisa.onrender.com/dashboard/social-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AgentVisa: give your agent a budget and keep the final say." />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/dashboard/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/dashboard/style.css" />
+    <script src="/dashboard/presentation.js" defer></script>
     <script src="/dashboard/app.js" defer></script>
   </head>
   <body data-hosted="false">
@@ -34,23 +40,27 @@
     </aside>
     <main>
       <header>
-        <div>
+        <div id="page-heading">
           <div class="eyebrow">AUTHORITY, WITH BOUNDARIES</div>
           <h1 id="page-title">Mission control</h1>
         </div>
         <button id="sandbox-shortcut" class="hosted-only">Try sandbox</button>
         <button id="session-toggle" class="secondary">Owner sign-in</button>
       </header>
+      <div id="sandbox-clock" class="session-clock" hidden>
+        <span id="sandbox-countdown" role="timer" aria-live="off"></span>
+        <button id="restart-sandbox" class="secondary" hidden>Start a fresh sandbox</button>
+      </div>
       <div id="notice" role="status" aria-live="polite" hidden></div>
       <section id="welcome" class="panel hero hosted-only">
         <span class="step">MEET AGENTVISA</span>
-        <h2>Give your agent a budget.<br />Keep the final say.</h2>
+        <h1>Give your agent a budget.<br />Keep the final say.</h1>
         <p>Give AI agents a spending visa with a budget, a human-approval threshold, revocation, and an audit trail.</p>
         <button id="start-sandbox">Try the sandbox →</button>
         <p class="hint">No sign-up or tokens. Your own temporary workspace. No real purchases.</p>
         <ol class="how-it-works">
           <li><strong>Set the limits</strong><span>A $300 budget. Ask you above $250.</span></li>
-          <li><strong>Watch a boundary hold</strong><span>A $450 purchase is blocked.</span></li>
+          <li><strong>Try a purchase</strong><span>Find out what happens when it costs $450.</span></li>
           <li><strong>Make the call</strong><span>Review a $275 purchase, then run it.</span></li>
         </ol>
       </section>
@@ -195,10 +205,10 @@
       <section id="actions-view" class="view" hidden>
         <section id="sandbox-tour" class="panel" hidden>
           <span class="step">YOUR 30-SECOND DEMO</span>
-          <h2>A $450 purchase is blocked. What about $275?</h2>
-          <p>Your sample mission has a $300 budget and asks for your approval above $250. We have queued a $275 purchase for you to review.</p>
-          <button id="sandbox-review">Review the $275 purchase →</button>
-          <button id="sandbox-block" class="secondary">Try the blocked $450 purchase</button>
+          <h2 id="tour-title">Will a $450 purchase fit a $300 budget?</h2>
+          <p id="tour-copy">Your agent wants a $450 computer monitor. Try the purchase and see how AgentVisa responds.</p>
+          <button id="sandbox-block">Try the $450 purchase →</button>
+          <button id="sandbox-review" hidden>Try a $275 purchase instead →</button>
           <p class="hint">Approval cannot override the $300 budget. After approval, choose “Run approved action” to simulate the purchase.</p>
         </section>
         <div class="intro">
@@ -232,10 +242,7 @@
               <p id="scenario-hint" class="hint"></p>
               <button type="submit" data-connected>Try this action</button>
             </form>
-            <p class="hint">
-              Each new proposal gets its own request ID. To recover an uncertain
-              response or execute after approval, retry the exact request below.
-            </p>
+
           </section>
           <section class="panel">
             <h2>Decision</h2>
@@ -244,12 +251,14 @@
                 Submit an action to see its decision and explanation.
               </p>
             </div>
-            <div id="request-controls" hidden>
+            <details id="request-controls" hidden>
+              <summary>Technical details: request status and retry</summary>
+              <p class="hint">Each new action has a unique request ID. If a response is interrupted, check its status or retry the exact request. A completed request will not run twice.</p>
               <p id="request-label" class="hint"></p>
               <button id="request-status" class="secondary">
                 Check request status</button
               ><button id="retry" class="secondary">Retry exact request</button>
-            </div>
+            </details>
           </section>
         </div>
       </section>
@@ -284,6 +293,7 @@
                 reason.
               </p>
             </div>
+            <p id="review-countdown" role="timer" aria-live="off" hidden></p>
             <div id="review-controls" hidden>
               <button id="approve">Approve this action</button
               ><button id="reject" class="secondary danger">

@@ -480,7 +480,7 @@ body[data-hosted="true"] .hosted-only { display: block; }
 .guide h2 { margin-top: 10px; }
 
 [hidden] { display: none !important; }
-.hero h2 { font-size: clamp(28px, 4vw, 48px); line-height: 1.12; margin: 16px 0; letter-spacing: -1px; }
+.hero h1 { font-size: clamp(28px, 4vw, 48px); line-height: 1.12; margin: 16px 0; letter-spacing: -1px; }
 .hero > p { max-width: 640px; }
 .how-it-works { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 22px 0 0 22px; }
 .how-it-works li { padding-left: 4px; }
@@ -497,3 +497,9 @@ body[data-hosted="true"] .hosted-only { display: block; }
   header { flex-wrap: wrap; gap: 10px; }
   header > div { flex-basis: 100%; }
 }
+
+.session-clock { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+.budget-status { font-weight: 650; }
+#review-countdown { font-weight: 600; color: #73531a; }
+header:has(#page-heading[hidden]) { justify-content: flex-end; margin-bottom: 16px; padding-bottom: 12px; }
+@media (max-width: 650px) { .session-clock { flex-wrap: wrap; } }

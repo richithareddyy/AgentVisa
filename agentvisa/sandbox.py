@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 from .api import create_app
 from .gateway import Gateway
-from .models import Action, draft
+from .models import draft
 
 
 @dataclass
@@ -49,11 +49,9 @@ class Sandbox:
             try:
                 gateway = Gateway(directory.name + "/sandbox.db")
                 visa = gateway.issue(draft("Buy a monitor under $300.", "procurement"))["visa_id"]
-                denied = gateway.execute("procurement", Action("sample-blocked", visa, "purchase", "vendor:approved", {"product_id": "monitor-ultra", "quantity": 1}))
-                pending = gateway.execute("procurement", Action("sample-review", visa, "purchase", "vendor:approved", {"product_id": "monitor-pro", "quantity": 1}))
                 admin, agent, key = (secrets.token_urlsafe(32) for _ in range(3))
                 self.workspaces[key] = Workspace(directory, create_app(gateway, admin, {agent: "procurement"}), now + self.ttl)
-                return 201, {"workspace": key, "admin": admin, "agent": agent, "identity": "procurement", "visa_id": visa, "expires_in": self.ttl, "blocked": denied, "pending": pending}
+                return 201, {"workspace": key, "admin": admin, "agent": agent, "identity": "procurement", "visa_id": visa, "expires_in": self.ttl}
             except BaseException:
                 directory.cleanup()
                 raise

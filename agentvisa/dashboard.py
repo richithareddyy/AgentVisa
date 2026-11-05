@@ -26,9 +26,13 @@ def install_dashboard(app):
     def dashboard():
         return asset("index.html", "text/html")
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return asset("favicon.ico", "image/x-icon")
+
     @app.get("/dashboard/{name}", include_in_schema=False)
     def dashboard_asset(name: str):
-        allowed = {"app.js": "text/javascript", "style.css": "text/css", "favicon.svg": "image/svg+xml"}
+        allowed = {"app.js": "text/javascript", "style.css": "text/css", "favicon.svg": "image/svg+xml", "presentation.js": "text/javascript", "social-preview.png": "image/png"}
         if name not in allowed:
             raise HTTPException(404, "asset not found")
         return asset(name, allowed[name])

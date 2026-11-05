@@ -2,7 +2,10 @@
 const $ = (id) => document.getElementById(id),
   visas = new Map(),
   pages = {};
-let sandboxVisa = null,
+let sandboxExpires = null,
+  reviewExpires = null,
+  currentView = "missions",
+  sandboxVisa = null,
   session = null,
   draft = null,
   selectedVisa = null,
@@ -35,7 +38,9 @@ function notice(text, error = false) {
 
 function updateGuide() {
   const connected = !!session;
-  $("sandbox-shortcut").hidden = connected;
+  const landing = document.body.dataset.hosted === "true" && !connected && currentView === "missions";
+  $("sandbox-shortcut").hidden = connected || landing;
+  $("page-heading").hidden = landing;
   const ready = connected && !!selectedVisa;
   $("next-step").hidden = !!session?.sandbox || (document.body.dataset.hosted === "true" && !connected);
   $("mission-connect-hint").hidden = connected;
@@ -153,10 +158,11 @@ async function api(
 const titles = {
   missions: "Mission control",
   actions: "Try an action",
-  approvals: "Human review",
+  approvals: "Approvals",
   audit: "Activity",
 };
 function view(name) {
+  currentView = name;
   document
     .querySelectorAll(".view")
     .forEach((e) => (e.hidden = e.id !== name + "-view"));
@@ -170,7 +176,8 @@ function view(name) {
   $("welcome").hidden = !!session || name !== "missions";
   if (document.body.dataset.hosted === "true") $("connection").hidden = true;
   $("page-title").textContent = titles[name];
-  $("page-title").scrollIntoView({ block: "start" });
+  updateGuide();
+  ( $("page-heading").hidden ? $("welcome") : $("page-title") ).scrollIntoView({ block: "start" });
 }
 document
   .querySelectorAll(".nav")
@@ -178,6 +185,10 @@ document
 function clear() {
   session = draft = selectedVisa = lastRequest = inspected = imported = sandboxVisa = null;
   $("sandbox-tour").hidden = true;
+  sandboxExpires = reviewExpires = null;
+  $("sandbox-clock").hidden = true;
+  $("review-countdown").hidden = true;
+  $("request-controls").open = false;
   visas.clear();
   Object.keys(pages).forEach((k) => delete pages[k]);
   [
@@ -380,7 +391,7 @@ async function load(kind, more = false) {
               ? "Cost unavailable"
               : money(item.cost_cents)),
         ),
-        el("p", item.request_id),
+        details({ request_id: item.request_id, agent: item.agent }, "Technical details"),
       );
       const b = el("button", "Inspect request", "secondary");
       b.addEventListener("click", () =>
@@ -389,19 +400,11 @@ async function load(kind, more = false) {
       card.append(b);
     } else {
       const e = item.event;
-      card.append(
-        el(
-          "span",
-          e.decision || e.event || "EVENT",
-          "badge " + (e.decision || ""),
-        ),
-        el(
-          "h3",
-          "#" + item.sequence + " · " + (e.tool || e.event || "Activity"),
-        ),
-        el("p", e.reason || e.visa_id || ""),
-        details(e, "Event details"),
-      );
+      card.append(el("h3", presentation.eventTitle(e)));
+      if (e.decision) card.append(el("p", presentation.explanation(e)), el("p", presentation.budget(e)));
+      else if (e.contract?.mission) card.append(el("p", e.contract.mission));
+      else if (e.event === "idempotent_replay") card.append(el("p", "The original result was returned without repeating the action."));
+      card.append(details({ sequence: item.sequence, ...e }, "Technical details"));
     }
     $(id).append(card);
   }
@@ -414,7 +417,7 @@ async function load(kind, more = false) {
       if (v.contract.agent_id !== session.identity) continue;
       const o = el(
         "option",
-        v.contract.mission + " · " + id.slice(0, 12) + " · " + v.status,
+        v.contract.mission + " · " + v.status,
       );
       o.value = id;
       $("action-visa").append(o);
@@ -478,7 +481,7 @@ bind("issue", "click", async () => {
     "/visas/inspect?" + new URLSearchParams({ visa_id: r.visa_id }),
   );
   if (!visas.has(r.visa_id)) {
-    const o = el("option", c.mission + " · " + r.visa_id.slice(0, 12));
+    const o = el("option", c.mission);
     o.value = r.visa_id;
     $("action-visa").append(o);
     visas.set(r.visa_id, data.chain[0]);
@@ -600,19 +603,9 @@ function decision(r) {
           : "No action executed",
       "decision-title",
     ),
-    el("p", r.decision === "DENY" && r.reason.includes("cumulative_budget")
-      ? "This purchase exceeds the mission’s remaining budget. Approval cannot override that limit."
-      : r.reason),
+    el("p", presentation.explanation(r, lastRequest)),
   );
-  if (r.cost_cents !== undefined)
-    e.append(
-      el(
-        "p",
-        "Cost: " +
-          money(r.cost_cents) +
-          (r.replayed ? " · Historical result replayed; no new effect." : ""),
-      ),
-    );
+  e.append(el("p", presentation.budget(r), "budget-status"));
   e.append(details(r));
   if (r.decision === "ASK_HUMAN") {
     const b = el("button", "Review this action", "secondary");
@@ -627,6 +620,7 @@ function decision(r) {
 async function execute(body) {
   lastRequest = structuredClone(body);
   $("request-controls").hidden = false;
+  $("request-controls").open = false;
   $("request-label").textContent = "Request " + body.request_id;
   $("decision").replaceChildren(
     el(
@@ -636,7 +630,7 @@ async function execute(body) {
   );
   const r = await api("/execute", "agent", "POST", body);
   decision(r);
-  if (session.sandbox && body.request_id === "sample-review" && r.executed) $("sandbox-tour").hidden = true;
+  if (session.sandbox && body.visa_id === sandboxVisa && body.tool === "purchase" && r.executed) $("sandbox-tour").hidden = true;
   await load("missions");
   notice(
     r.replayed
@@ -648,6 +642,7 @@ async function execute(body) {
           : "Action denied; no effect committed.",
   );
   await refresh();
+  return r;
 }
 bind("action-form", "submit", async () => {
   const visa = $("action-visa").value;
@@ -688,6 +683,8 @@ async function inspectReview(agent, id) {
     "/approvals/inspect?" + new URLSearchParams({ agent, request_id: id }),
   );
   inspected = d;
+  reviewExpires = performance.now() + (d.deadline - d.server_time) * 1000;
+  $("review-countdown").hidden = false;
   $("review-detail").replaceChildren(
     el("h3", d.mission),
     el("p", d.reason),
@@ -706,7 +703,7 @@ async function inspectReview(agent, id) {
     el("p", d.action.tool === "purchase"
       ? "Buy " + d.action.arguments.quantity + " × " + ({"monitor-pro": "productivity computer monitor", "monitor-basic": "office computer monitor", "monitor-ultra": "studio computer monitor"}[d.action.arguments.product_id] || d.action.arguments.product_id) + " from the approved vendor."
       : d.action.tool.replaceAll("_", " ") + " · " + d.action.resource),
-    details({ action: d.action, fingerprint: d.fingerprint }, "Exact request and fingerprint"),
+    details({ action: d.action, fingerprint: d.fingerprint }, "Technical details: exact request"),
     details(d, "Policy and intent checks"),
   );
   $("review-controls").hidden = d.expired || d.approval_status !== "pending";
@@ -714,6 +711,7 @@ async function inspectReview(agent, id) {
     d.expired ||
     d.approval_status !== "approved" ||
     d.agent !== session.identity;
+  tick();
 }
 async function review(approve) {
   if (!inspected) return;
@@ -733,6 +731,8 @@ async function review(approve) {
   if (approve) await inspectReview(d.agent, d.request_id);
   else {
     inspected = null;
+    reviewExpires = null;
+    $("review-countdown").hidden = true;
     $("review-detail").replaceChildren(el("p", "Request rejected."));
   }
   await refresh();
@@ -741,6 +741,8 @@ bind("approve", "click", () => review(true));
 bind("reject", "click", () => review(false));
 bind("execute-approved", "click", async () => {
   const action = structuredClone(inspected.action);
+  reviewExpires = null;
+  $("review-countdown").hidden = true;
   $("execute-approved").hidden = true;
   view("actions");
   await execute(action);
@@ -755,30 +757,65 @@ bind("integrity", "click", async () => {
   );
 });
 $("sandbox-shortcut").addEventListener("click", () => $("start-sandbox").click());
-bind("start-sandbox", "click", async () => {
+async function startSandbox() {
   $("start-sandbox").textContent = "Preparing your sandbox…";
   try {
+    const started = performance.now();
     const response = await fetch("/sandbox/start", { method: "POST", credentials: "omit", redirect: "error", cache: "no-store", signal: AbortSignal.timeout(60000) });
     const data = await response.json();
     if (!response.ok) throw Error(data.detail || "Sandbox could not start. Please try again.");
     await connect(data.admin, data.agent, data.identity, data.workspace);
+    sandboxExpires = started + data.expires_in * 1000;
+    $("sandbox-clock").hidden = false;
     sandboxVisa = data.visa_id;
     selectedVisa = data.visa_id;
     $("action-visa").value = data.visa_id;
     $("sandbox-tour").hidden = false;
     view("actions");
-    decision(data.blocked);
+    $("sandbox-review").hidden = true;
+    $("sandbox-block").hidden = false;
+    $("tour-title").textContent = "Will a $450 purchase fit a $300 budget?";
+    $("tour-copy").textContent = "Your agent wants a $450 computer monitor. Try the purchase and see how AgentVisa responds.";
+    $("decision").replaceChildren(el("p", "Try the $450 purchase to see AgentVisa make a decision."));
+    tick();
   } finally {
     $("start-sandbox").textContent = "Try the sandbox →";
   }
-});
+}
+bind("start-sandbox", "click", startSandbox);
+bind("restart-sandbox", "click", startSandbox);
 bind("sandbox-review", "click", async () => {
-  view("approvals");
-  await inspectReview(session.identity, "sample-review");
+  const request = { request_id: crypto.randomUUID(), visa_id: sandboxVisa, tool: "purchase", resource: "vendor:approved", arguments: { product_id: "monitor-pro", quantity: 1 }, context: "" };
+  const result = await execute(request);
+  if (result.decision === "ASK_HUMAN") {
+    view("approvals");
+    await inspectReview(session.identity, request.request_id);
+  }
 });
 bind("sandbox-block", "click", async () => {
-  await execute({ request_id: crypto.randomUUID(), visa_id: sandboxVisa, tool: "purchase", resource: "vendor:approved", arguments: { product_id: "monitor-ultra", quantity: 1 }, context: "" });
+  const result = await execute({ request_id: crypto.randomUUID(), visa_id: sandboxVisa, tool: "purchase", resource: "vendor:approved", arguments: { product_id: "monitor-ultra", quantity: 1 }, context: "" });
+  if (result.decision === "DENY") {
+    $("sandbox-review").hidden = false;
+    $("sandbox-block").hidden = true;
+    $("tour-title").textContent = "Blocked. Now try a purchase within the budget.";
+    $("tour-copy").textContent = "$275 fits the $300 budget, but it is above your $250 approval threshold. Try it to see how approval works.";
+  }
 });
+function tick() {
+  const now = performance.now();
+  if (sandboxExpires !== null) {
+    $("sandbox-countdown").textContent = "Sandbox · " + presentation.countdown(sandboxExpires, now);
+    $("restart-sandbox").hidden = now < sandboxExpires;
+  }
+  if (reviewExpires !== null) {
+    $("review-countdown").textContent = "Approval window · " + presentation.countdown(reviewExpires, now) + (now >= reviewExpires ? ". Try a new purchase to request a fresh review." : "");
+    if (now >= reviewExpires) {
+      $("review-controls").hidden = true;
+      $("execute-approved").hidden = true;
+    }
+  }
+}
+setInterval(tick, 1000);
 view("missions");
 window.addEventListener("pagehide", clear);
 controls();

@@ -16,7 +16,7 @@ Provider references: [Blueprint configuration](https://render.com/docs/blueprint
 
 ## Public visitor sandbox
 
-Visitors choose **Try the sandbox** without supplying owner credentials. Each sandbox receives its own temporary SQLite database and independently generated administrator and agent capabilities, held only in page memory. These capabilities cannot access the owner API or another sandbox. The demo seeds a $300 computer-monitor mission, a blocked $450 purchase, and a $275 request awaiting approval. Approval and execution remain separate steps through the existing gateway.
+Visitors choose **Try the sandbox** without supplying owner credentials. Each sandbox receives its own temporary SQLite database and independently generated administrator and agent capabilities, held only in page memory. These capabilities cannot access the owner API or another sandbox. The demo seeds only a $300 computer-monitor mission. The visitor submits the $450 purchase to see it blocked, then submits a $275 purchase to open a fresh approval window. No actions run before the visitor asks for them. Approval and execution remain separate steps through the existing gateway.
 
 Sandboxes expire after 15 minutes. Expired directories are removed on subsequent sandbox traffic when no request is using them. One process permits at most 24 simultaneous workspaces, 12 starts per minute globally, and 200 API calls per workspace. The global limits bound demo storage but can also make the demo temporarily busy; this is not a production anti-abuse service. Restarting the service clears sandbox access. Run only one worker as configured.
 

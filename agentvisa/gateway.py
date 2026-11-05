@@ -251,6 +251,9 @@ class Gateway:
                 for row, _ in chain:
                     db.execute("UPDATE visas SET spent=spent+?, actions=actions+1 WHERE id=?", (prepared.cost, row["id"]))
                 response.update({"effect_id": effect_id, "result": result})
+            if chain and chain[0][1].agent_id == principal:
+                remaining = min(c.spending_limit - row["spent"] for row, c in chain)
+                response["remaining_budget_cents"] = max(0, remaining - (prepared.cost if decision == "ALLOW" else 0))
             state = "pending" if decision == "ASK_HUMAN" else "completed"
             if decision == "ASK_HUMAN":
                 response["approval_deadline"] = deadline

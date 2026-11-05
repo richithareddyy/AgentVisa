@@ -39,3 +39,13 @@ def test_dashboard_review_flow_preserves_authority(tmp_path):
     assert client.post('/execute', headers=machine, json=inspected['action']).json()['executed']
     assert client.post('/execute', headers=machine, json=inspected['action']).json()['replayed']
     assert len(gateway.snapshot()['effects']) == 1
+
+
+def test_share_assets_and_metadata(tmp_path):
+    client = TestClient(create_app(Gateway(str(tmp_path / 'assets.db')), 'a' * 40, {'b' * 40: 'procurement'}))
+    image = client.get('/dashboard/social-preview.png')
+    assert image.status_code == 200 and image.content.startswith(b'\x89PNG')
+    icon = client.get('/favicon.ico')
+    assert icon.status_code == 200 and icon.content.startswith(b'\x00\x00\x01\x00')
+    assert client.get('/dashboard/presentation.js').status_code == 200
+    assert 'og:image' in client.get('/').text
