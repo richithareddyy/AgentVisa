@@ -779,7 +779,7 @@ async function startSandbox() {
     $("decision").replaceChildren(el("p", "Try the $450 purchase to see AgentVisa make a decision."));
     tick();
   } finally {
-    $("start-sandbox").textContent = "Try the sandbox →";
+    $("start-sandbox").textContent = "Try this scenario →";
   }
 }
 bind("start-sandbox", "click", startSandbox);
