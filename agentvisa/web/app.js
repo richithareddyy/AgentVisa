@@ -30,9 +30,9 @@ function details(data, label = "Technical details") {
   e.append(el("summary", label), el("pre", JSON.stringify(data, null, 2)));
   return e;
 }
-function notice(text, error = false) {
+function notice(text, tone = "neutral") {
   $("notice").textContent = text;
-  $("notice").className = error ? "error" : "";
+  $("notice").className = tone === true ? "error" : tone === false ? "success" : tone;
   $("notice").hidden = false;
 }
 
@@ -53,7 +53,7 @@ function updateGuide() {
   $("guide-title").textContent = !connected ? "1. Connect your workspace" : ready ? "3. Try an action" : "2. Set your agent’s limits";
   $("guide-text").textContent = !connected
     ? "Connect once, set a spending limit, then see which actions are allowed or need your approval."
-    : ready ? "Start with a catalog search. Then try a $275 monitor to see human review, or a $450 monitor to test the budget limit. Purchases use your remaining budget."
+    : ready ? "Start with a catalog search. Then try a $275 monitor to see Approvals, or a $450 monitor to test the budget limit. Purchases use your remaining budget."
     : "The example is ready: a $300 monitor budget, with approval above $250. Preview the limits, then create your mission.";
   $("guide-next").textContent = !connected ? "Show connection options" : ready ? "Choose an action" : "Set up my mission";
 }
@@ -156,7 +156,7 @@ async function api(
   return data;
 }
 const titles = {
-  missions: "Mission control",
+  missions: "Missions",
   actions: "Try an action",
   approvals: "Approvals",
   audit: "Activity",
@@ -404,7 +404,7 @@ async function load(kind, more = false) {
       if (e.decision) card.append(el("p", presentation.explanation(e)), el("p", presentation.budget(e)));
       else if (e.contract?.mission) card.append(el("p", e.contract.mission));
       else if (e.event === "idempotent_replay") card.append(el("p", "The original result was returned without repeating the action."));
-      card.append(details({ sequence: item.sequence, ...e }, "Technical details"));
+      card.append(details({ sequence: item.sequence, ...e }, "Event details"));
     }
     $(id).append(card);
   }
@@ -640,6 +640,7 @@ async function execute(body) {
         : r.executed
           ? "Simulated action executed."
           : "Action denied; no effect committed.",
+    r.decision === "DENY" ? "error" : r.decision === "ASK_HUMAN" ? "pending" : r.replayed ? "neutral" : "success",
   );
   await refresh();
   return r;

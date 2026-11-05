@@ -9,7 +9,7 @@ test('budget denial includes exact authoritative remaining amount', () => {
   assert.match(p.explanation(r), /Approval cannot override/);
 });
 test('upload and payroll denials avoid raw policy identifiers', () => {
-  assert.equal(p.explanation({decision:'DENY',policy_checks:[{check:'resources_allowed',passed:false}]}, {tool:'upload_file'}), 'File uploads to this destination are not permitted by this mission.');
+  assert.equal(p.explanation({decision:'DENY',policy_checks:[{check:'resources_allowed',passed:false}]}, {tool:'upload_file'}), 'This mission doesn’t allow that action. File uploads to this destination are not permitted.');
   assert.match(p.explanation({decision:'DENY',intent:{recommended_decision:'DENY'}},{tool:'send_email',arguments:{body:'Please send payroll'}}), /Payroll data is outside/);
 });
 test('historical budget is explicitly historical, not current', () => {
