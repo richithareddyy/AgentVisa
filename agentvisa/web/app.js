@@ -591,10 +591,13 @@ function hint() {
 }
 $("scenario").addEventListener("change", hint);
 hint();
-function decision(r) {
-  const e = $("decision");
+function decision(r, e = $("decision"), action = lastRequest) {
+  const label = {DENY:"DENIED", ASK_HUMAN:"NEEDS YOUR SIGNATURE", ALLOW:"APPROVED"}[r.decision] || "DECISION";
+  e.classList.add("decision-result");
+  e.dataset.decision = r.decision;
+  $("decision-announcement").replaceChildren(el("span", label + ". " + presentation.explanation(r, action) + " " + presentation.budget(r)));
   e.replaceChildren(
-    el("span", r.decision, "badge " + r.decision),
+    el("span", label, "visa-stamp " + r.decision),
     el(
       "h3",
       r.executed
@@ -604,7 +607,7 @@ function decision(r) {
           : "No action executed",
       "decision-title",
     ),
-    el("p", presentation.explanation(r, lastRequest)),
+    el("p", presentation.explanation(r, action)),
   );
   e.append(el("p", presentation.budget(r), "budget-status"));
   e.append(details(r));

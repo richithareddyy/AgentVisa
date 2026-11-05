@@ -530,3 +530,15 @@ header:has(#page-heading[hidden]) { justify-content: flex-end; margin-bottom: 16
 @keyframes ghost-return { to { opacity:0; } }
 @keyframes ghost-pulse { 50% { opacity:.5; } }
 @media (prefers-reduced-motion:reduce) { .budget-track .ghost { animation:none !important; } .budget-track[data-decision="DENY"] .ghost { opacity:.45; } }
+
+:root { --deny:#a12b25; --pending:#795100; --allow:#20583e; }
+.sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0; }
+.visa-stamp { display:inline-block;border:3px double currentColor;border-radius:8px;padding:7px 12px;font-weight:800;font-size:15px;letter-spacing:1px;transform:rotate(-4deg);animation:stamp-thunk 250ms ease-out;max-width:100%; }
+.visa-stamp.DENY { color:var(--deny);background:#fff2ef; }
+.visa-stamp.ASK_HUMAN { color:var(--pending);background:#fff4d9; }
+.visa-stamp.ALLOW { color:var(--allow);background:#edf6e7; }
+.decision-result { padding-top:12px;overflow-wrap:anywhere; }
+.decision-result[data-decision="DENY"] { animation:card-shake 250ms ease-out; }
+@keyframes stamp-thunk { from { opacity:0; transform:scale(1.3) rotate(-9deg); } to { opacity:1;transform:scale(1) rotate(-4deg); } }
+@keyframes card-shake { 25% { transform:translateX(-3px); } 75% { transform:translateX(3px); } }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important;transition:none !important;scroll-behavior:auto !important; } }
