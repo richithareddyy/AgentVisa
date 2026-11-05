@@ -41,7 +41,6 @@
     <main>
       <header>
         <div id="page-heading">
-          
           <h1 id="page-title">Mission control</h1>
         </div>
         <button id="sandbox-shortcut" class="hosted-only">Try sandbox</button>
@@ -210,6 +209,15 @@
         </section>
       </section>
       <section id="actions-view" class="view" hidden>
+        <aside id="budget-panel" class="panel budget-panel" hidden aria-label="Live mission budget">
+          <span class="step">YOUR AGENT’S VISA</span>
+          <h2 id="budget-label">Mission budget</h2>
+          <div id="budget-track" class="budget-track" role="img"></div>
+          <div class="budget-scale"><span id="budget-limit-label"></span><span>Over budget →</span></div>
+          <p id="budget-threshold" class="hint"></p>
+          <p id="budget-attempt" class="hint" hidden></p>
+          <div class="budget-key"><span>■ Spent</span><span>▧ Attempt</span><span>┆ Approval line</span></div>
+        </aside>
         <section id="sandbox-tour" class="panel" hidden>
           <span class="step">YOUR 30-SECOND DEMO</span>
           <h2 id="tour-title">Will a $450 purchase fit a $300 budget?</h2>

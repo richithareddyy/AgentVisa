@@ -185,6 +185,7 @@ document
 function clear() {
   session = draft = selectedVisa = lastRequest = inspected = imported = sandboxVisa = null;
   $("sandbox-tour").hidden = true;
+  $("budget-panel").hidden = true;
   sandboxExpires = reviewExpires = null;
   $("sandbox-clock").hidden = true;
   $("review-countdown").hidden = true;
@@ -632,6 +633,7 @@ async function execute(body) {
   decision(r);
   if (session.sandbox && body.visa_id === sandboxVisa && body.tool === "purchase" && r.executed) $("sandbox-tour").hidden = true;
   await load("missions");
+  if (session.sandbox) renderBudget(body.visa_id, r);
   notice(
     r.replayed
       ? "Stored result replayed; no new effect."
@@ -769,6 +771,7 @@ async function startSandbox() {
     sandboxExpires = started + data.expires_in * 1000;
     $("sandbox-clock").hidden = false;
     sandboxVisa = data.visa_id;
+    renderBudget(sandboxVisa);
     selectedVisa = data.visa_id;
     $("action-visa").value = data.visa_id;
     $("sandbox-tour").hidden = false;
@@ -802,6 +805,35 @@ bind("sandbox-block", "click", async () => {
     $("tour-copy").textContent = "$275 fits the $300 budget, but it is above your $250 approval threshold. Try it to see how approval works.";
   }
 });
+function renderBudget(id, response = null) {
+  const mission = visas.get(id);
+  if (!session?.sandbox || !mission) return;
+  const total = mission.contract.spending_limit, spent = mission.spent;
+  const threshold = mission.contract.approval_threshold;
+  const attempt = response && !response.executed && !response.replayed && Number.isSafeInteger(response.cost_cents) ? response.cost_cents : 0;
+  const ratio = cents => total > 0 ? cents / total * 100 : 0;
+  const track = $("budget-track");
+  track.replaceChildren();
+  track.dataset.decision = response?.decision || "none";
+  for (let i = 0; i < 150; i++) {
+    const cell = el("span", undefined, "budget-cell");
+    cell.setAttribute("aria-hidden", "true");
+    cell.classList.toggle("spent", i < ratio(spent));
+    cell.classList.toggle("ghost", i >= ratio(spent) && i < ratio(spent + attempt));
+    cell.classList.toggle("overflow", i >= 100);
+    cell.classList.toggle("threshold", i === Math.min(99, Math.max(0, Math.round(ratio(threshold)))));
+    cell.classList.toggle("budget-end", i === 99);
+    track.append(cell);
+  }
+  const label = money(spent) + " of " + money(total) + " spent · " + money(Math.max(0, total - spent)) + " left";
+  $("budget-label").textContent = label;
+  track.setAttribute("aria-label", label + ". Approval above " + money(threshold) + (attempt ? ". Attempt: " + money(attempt) : ""));
+  $("budget-limit-label").textContent = money(total) + " budget";
+  $("budget-threshold").textContent = "Ask for your signature above " + money(threshold);
+  $("budget-attempt").hidden = !attempt;
+  $("budget-attempt").textContent = "Attempt: " + money(attempt) + (response?.decision === "DENY" ? " · blocked, nothing spent" : " · awaiting your decision, nothing reserved");
+  $("budget-panel").hidden = false;
+}
 function tick() {
   const now = performance.now();
   if (sandboxExpires !== null) {
