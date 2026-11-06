@@ -239,6 +239,12 @@
               <button id="explore-finish">Explore freely</button><a class="button-link secondary" href="/docs" target="_blank" rel="noopener">API reference</a><button id="restart-demo" class="secondary">Restart demo</button>
             </section>
             <div id="free-exploration">
+              <section id="challenges" hidden aria-label="Free exploration challenges">
+                <div class="intro"><h2>Can you cross the boundary?</h2><p>Try a challenge. Every result comes from the same policy checks.</p></div>
+                <article class="panel challenge-card"><h3>Can you overspend?</h3><p id="challenge-budget-description">Try the office monitor against your remaining budget.</p><button id="challenge-basic">Try the $180 monitor</button><div id="challenge-basic-result" tabindex="-1" hidden></div></article>
+                <article class="panel challenge-card"><h3>Can you trick it into reading payroll?</h3><p>The agent’s mission is buying a monitor. Try asking for employee payroll instead.</p><button id="challenge-drift">Request payroll information</button><div id="challenge-drift-result" tabindex="-1" hidden></div></article>
+                <article class="panel challenge-card"><h3>Can it upload a file it shouldn’t?</h3><p>Try sending a file to an unapproved destination. No real file is read or uploaded.</p><button id="challenge-upload">Attempt a file upload</button><div id="challenge-upload-result" tabindex="-1" hidden></div></article>
+              </section>
         <div class="intro">
           <h2>See where authority stops.</h2>
           <p>

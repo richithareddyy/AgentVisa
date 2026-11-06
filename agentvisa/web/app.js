@@ -191,6 +191,8 @@ function clear() {
   $("free-exploration").hidden = false;
   $("inline-approval").hidden = true;
   $("demo-finish").hidden = true;
+  $("challenges").hidden = true;
+  ["basic","drift","upload"].forEach(k => { $("challenge-" + k + "-result").hidden = true; });
   $("mini-activity").hidden = true;
   session = draft = selectedVisa = lastRequest = inspected = imported = sandboxVisa = null;
   $("sandbox-tour").hidden = true;
@@ -657,7 +659,7 @@ async function execute(body, target = $("decision")) {
     demo.verified = false;
     updateProgress();
   }
-  if (target.id === "story-result") revealResult(target);
+  if (target.id !== "decision") revealResult(target);
   await load("missions");
   if (session.sandbox) renderBudget(body.visa_id, r);
   notice(
@@ -781,7 +783,7 @@ async function verifyIntegrity() {
   if (demo) {
     demo.verified = r.valid === true;
     updateProgress();
-    if (demo.verified && hasGuidedSuccess()) finishDemo();
+    if (demo.mode === "guided" && demo.verified && hasGuidedSuccess()) finishDemo();
   }
   return r;
 }
@@ -843,6 +845,8 @@ function exploreFreely() {
   $("demo-finish").hidden = true;
   $("sandbox-tour").hidden = true;
   $("free-exploration").hidden = false;
+  $("challenges").hidden = false;
+  renderChallengeBudget();
   view("actions");
 }
 bind("skip-demo", "click", exploreFreely);
@@ -939,6 +943,20 @@ function finishDemo() {
 bind("demo-audit", "click", async () => { await load("audit"); await verifyIntegrity(); });
 bind("explore-finish", "click", exploreFreely);
 bind("restart-demo", "click", startSandbox);
+function renderChallengeBudget() {
+  const mission = visas.get(sandboxVisa);
+  if (mission) $("challenge-budget-description").textContent = "Try the $180 monitor with " + money(Math.max(0, mission.contract.spending_limit - mission.spent)) + " left on your demo visa.";
+}
+for (const kind of ["basic", "drift", "upload"]) {
+  bind("challenge-" + kind, "click", async () => {
+    const [tool, resource, args] = scenarios[kind];
+    const request = {request_id:crypto.randomUUID(), visa_id:sandboxVisa, tool, resource, arguments:structuredClone(args), context:""};
+    const target = $("challenge-" + kind + "-result");
+    target.hidden = false;
+    await execute(request, target);
+    renderChallengeBudget();
+  });
+}
 function renderBudget(id, response = null) {
   const mission = visas.get(id);
   if (!session?.sandbox || !mission) return;
