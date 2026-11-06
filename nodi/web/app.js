@@ -41,6 +41,7 @@ function notice(text, tone = "neutral") {
 function updateGuide() {
   const connected = !!session;
   const landing = document.body.dataset.hosted === "true" && !connected && currentView === "missions";
+  document.body.dataset.screen = landing ? "landing" : "workspace";
   $("sandbox-shortcut").hidden = connected || landing;
   $("page-heading").hidden = landing;
   const ready = connected && !!selectedVisa;
@@ -820,10 +821,11 @@ async function startSandbox() {
     view("actions");
     tick();
   } finally {
-    $("start-sandbox").textContent = "Try this scenario →";
+    $("start-sandbox").textContent = "Try Nodi free ↗";
   }
 }
 bind("start-sandbox", "click", startSandbox);
+["nav-start", "scenario-start", "footer-start"].forEach(id => bind(id, "click", startSandbox));
 bind("restart-sandbox", "click", startSandbox);
 function revealResult(target) {
   target.hidden = false;

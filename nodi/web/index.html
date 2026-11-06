@@ -23,6 +23,7 @@
       <a class="brand" href="/" aria-label="Nodi home"
         ><span class="mark">N</span>Nodi</a
       >
+      <nav class="landing-nav" aria-label="Explore Nodi"><a href="#how">How it works</a><a href="#demo-example">The demo</a><a href="/docs" target="_blank" rel="noopener">API ↗</a><button id="nav-start">Try Nodi ↗</button></nav>
       <div class="workspace">LOCAL WORKSPACE</div>
       <nav aria-label="Main navigation">
         <button class="nav active" data-view="missions">
@@ -52,24 +53,24 @@
       </header>
       <div id="decision-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="notice" role="status" aria-live="polite" hidden></div>
-      <section id="welcome" class="panel hero hosted-only">
-        <span class="step">WHAT NODI DOES</span>
-        <h1>Give your agent a budget.<br />Keep the final say.</h1>
-        <p>Nodi controls what an AI agent is allowed to do. Give the agent a mission, set its budget, and decide which actions need your approval.</p>
-        <p>Before an action runs, Nodi checks those rules. It allows actions within the limits, pauses actions that need your approval, and blocks actions outside the mission. Each decision is recorded so you can review what happened.</p>
-        <ol class="how-it-works" aria-label="How Nodi works">
-          <li><strong>Define the mission</strong><span>Choose what the agent may do and how much it may spend.</span></li>
-          <li><strong>Check each action</strong><span>Nodi checks the mission, permissions, and spending limits.</span></li>
-          <li><strong>Stay in control</strong><span>Approve requests, revoke permission, and review the activity history.</span></li>
-        </ol>
-        <section class="scenario-intro" aria-labelledby="example-title">
-          <span class="step">NOW TRY AN EXAMPLE</span>
-          <h2 id="example-title">An agent is buying a computer monitor.</h2>
-          <p>You tell it: <strong>“Spend at most $300, and ask me before spending more than $250.”</strong></p>
-          <p>First, try a $450 monitor. Then try a $275 monitor and follow the approval process. See how the same rules handle each purchase.</p>
-          <button id="start-sandbox">Try this scenario →</button>
-          <p class="hint">No sign-up or tokens. Your own temporary workspace. All purchases are simulated; no real money is spent.</p>
-        </section>
+      <section id="welcome" class="hero hosted-only">
+        <div class="hero-atmosphere" aria-hidden="true"><div class="orbit"></div><div class="horizon"></div></div>
+        <div class="hero-copy">
+          <span class="release-pill"><span>Meet Nodi</span> A nod of approval.</span>
+          <h1>Give your agent a budget.<br />Keep the <em>final say.</em></h1>
+          <p class="hero-description">Nodi controls what your AI agent can do. Set its mission and spending limits. It checks every action, asks when it needs your approval, and blocks what’s out of bounds.</p>
+          <div class="hero-actions"><button id="start-sandbox">Try Nodi free <span aria-hidden="true">↗</span></button><a class="quiet-link" href="#how">See how it works <span aria-hidden="true">↓</span></a></div>
+          <p class="hero-footnote">No sign-up. No real purchases. You stay in control.</p>
+        </div>
+        <div class="product-stage" aria-label="Illustration of the monitor purchase example">
+          <div class="preview-console"><div class="window-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><span>nodi / mission control</span><span class="preview-live">EXAMPLE</span></div>
+            <div class="preview-layout"><div class="preview-thread"><span class="step">THE MISSION</span><h2>One monitor.<br />A $300 budget.</h2><p>Ask me before spending more than $250.</p><div class="preview-message"><span>AGENT</span><p>Found a productivity monitor for $275.<br />Can I get your approval?</p></div><div class="preview-verdict"><span class="status-dot"></span> Waiting for your nod <span>↗</span></div></div><div class="preview-visa"><span class="step">YOUR BOUNDARIES</span><div class="preview-number">$300<span>total budget</span></div><div class="preview-meter"><span></span></div><div class="preview-limit"><span>Approval above</span><strong>$250</strong></div><div class="preview-limit"><span>Spent so far</span><strong>$0</strong></div><div class="preview-rule">✓ Mission checked<br />✓ Budget checked<br /><span>◷ Your approval needed</span></div></div></div>
+          </div>
+          <p class="stage-caption">The agent proposes. Nodi checks. You decide.</p>
+        </div>
+        <section id="how" class="landing-section"><span class="step">AUTHORITY, ON YOUR TERMS</span><h2>Give it room to act.<br /><em>Keep the boundaries.</em></h2><p>Every action meets the same rules before it runs. An approval never overrides a hard limit.</p><ol class="how-it-works" aria-label="How Nodi works"><li><span class="feature-number">01 / DEFINE</span><strong>A clear mission.</strong><span>Choose what the agent may do, which tools it may use, and how much it may spend.</span></li><li><span class="feature-number">02 / CHECK</span><strong>A check before every action.</strong><span>Within the rules? It can run. Outside the mission or over budget? It’s blocked.</span></li><li><span class="feature-number">03 / DECIDE</span><strong>The final say is yours.</strong><span>Review the exact action, approve or reject it, and see every decision in the activity log.</span></li></ol></section>
+        <section id="demo-example" class="scenario-intro landing-section" aria-labelledby="example-title"><div><span class="step">TAKE IT FOR A SPIN</span><h2 id="example-title">An agent wants a monitor.<br /><em>You set the rules.</em></h2><p>“Spend at most $300. Ask me before spending more than $250.”</p><p>Try a $450 purchase. Watch it get blocked. Then approve the $275 option and check the audit trail.</p><button id="scenario-start">Try this scenario →</button><p class="hint">Your own temporary sandbox. Every purchase is simulated.</p></div><ol class="scenario-receipt" aria-label="Example decisions"><li><span>01</span><div>Studio monitor<strong>$450 · Over budget</strong></div><b class="receipt-deny">Blocked</b></li><li><span>02</span><div>Productivity monitor<strong>$275 · Within budget</strong></div><b class="receipt-ask">Ask you</b></li><li><span>03</span><div>Every decision<strong>Recorded and reviewable</strong></div><b class="receipt-allow">Logged</b></li></ol></section>
+        <section class="landing-section final-invite"><span class="step">A LITTLE AUTONOMY. A LOT OF CONTROL.</span><h2>Let it act.<br /><em>With your nod.</em></h2><button id="footer-start">Open the sandbox ↗</button><p class="hint">Limited authority. Clear decisions. No unlimited trust required.</p></section>
       </section>
       <section id="next-step" class="panel guide" aria-label="Getting started">
         <span class="step">NEXT STEP</span>
