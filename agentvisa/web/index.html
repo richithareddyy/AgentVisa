@@ -213,6 +213,9 @@
         <div id="demo-layout" class="demo-layout">
           <div id="demo-main">
             <section id="sandbox-tour" class="panel conversation" hidden aria-label="Guided agent conversation">
+              <ol id="demo-progress" class="demo-progress" aria-label="Demo progress">
+                <li id="progress-blocked">1 · Blocked</li><li id="progress-approved">2 · Approved</li><li id="progress-audited">3 · Audited</li>
+              </ol>
               <div class="story-heading"><span class="step">LIVE AGENT DEMO</span><button id="skip-demo" class="text-button">Skip to free explore</button></div>
               <div id="story-message" class="agent-message"><strong>Agent</strong><p id="agent-line">I found a studio monitor. Shall I try buying it?</p></div>
               <button id="sandbox-block">Try the studio monitor</button>
@@ -227,7 +230,13 @@
                 <div id="inline-review-buttons"><button id="inline-approve">Approve</button><button id="inline-reject" class="secondary danger">Reject</button></div>
                 <button id="inline-run" hidden>Run it</button>
               </section>
+              <button id="demo-audit" hidden>See the audit trail →</button>
               <details id="guided-recovery" hidden><summary>Technical details: request recovery</summary><p>If a response was interrupted, recover the exact request before trying again.</p><button id="guided-retry" class="secondary">Retry exact request</button></details>
+            </section>
+            <section id="demo-finish" class="panel finish-card" hidden tabindex="-1">
+              <span class="step">MISSION DEMONSTRATED</span><h2>Your agent acted. You kept control.</h2>
+              <p id="finish-summary"></p><p class="hint">The local audit chain was verified. This is a consistency check, not independent proof of history.</p>
+              <button id="explore-finish">Explore freely</button><a class="button-link secondary" href="/docs" target="_blank" rel="noopener">API reference</a><button id="restart-demo" class="secondary">Restart demo</button>
             </section>
             <div id="free-exploration">
         <div class="intro">
@@ -292,6 +301,7 @@
           <p id="budget-attempt" class="hint" hidden></p>
           <div class="budget-key"><span>■ Spent</span><span>▧ Attempt</span><span>┆ Approval line</span></div>
         </aside>
+            <section id="mini-activity" class="panel mini-activity" hidden aria-label="Recent activity"><h2>Live activity</h2><div id="mini-events"></div></section>
           </div>
         </div>
       </section>

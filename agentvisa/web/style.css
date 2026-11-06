@@ -555,3 +555,16 @@ header:has(#page-heading[hidden]) { justify-content: flex-end; margin-bottom: 16
 .approval-notification .step { color:#795100;margin-bottom:10px; }
 .approval-notification button { min-height:44px; }
 .typing { display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0;color:#53675c; }
+
+.demo-progress { list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 22px;padding:0;font-size:12px;font-weight:700; }
+.demo-progress li { padding:10px 4px;border-bottom:3px solid #dce3d9;color:#53675c; }
+.demo-progress li.complete { border-color:var(--allow);color:var(--allow); }
+.demo-progress li[aria-current="step"] { border-color:#795100;color:#795100; }
+.finish-card { background:#edf6e7;border-color:#b5ccb2; }
+#finish-summary { font-size:22px;font-weight:650;color:#20583e; }
+.button-link { display:inline-block;padding:10px 14px;border:1px solid #b5ccb2;border-radius:8px;color:#20583e;text-decoration:none;font-weight:600;margin:6px; }
+.mini-event { border-left:3px solid #b6c4b4;padding:8px 0 8px 12px;font-size:13px;margin:8px 0; }
+.mini-event[data-decision="DENY"] { border-color:var(--deny); }
+.mini-event[data-decision="ASK_HUMAN"] { border-color:var(--pending); }
+.mini-event[data-decision="ALLOW"] { border-color:var(--allow); }
+#demo-audit { margin-top:18px; }

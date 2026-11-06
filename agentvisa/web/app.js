@@ -190,6 +190,8 @@ function clear() {
   document.body.dataset.workspace = "owner";
   $("free-exploration").hidden = false;
   $("inline-approval").hidden = true;
+  $("demo-finish").hidden = true;
+  $("mini-activity").hidden = true;
   session = draft = selectedVisa = lastRequest = inspected = imported = sandboxVisa = null;
   $("sandbox-tour").hidden = true;
   $("budget-panel").hidden = true;
@@ -415,6 +417,14 @@ async function load(kind, more = false) {
       card.append(details({ sequence: item.sequence, ...e }, "Event details"));
     }
     $(id).append(card);
+  }
+  if (kind === "audit" && session?.sandbox) {
+    $("mini-activity").hidden = false;
+    $("mini-events").replaceChildren(...result.items.slice(-4).reverse().map(item => {
+      const row = el("p", presentation.eventTitle(item.event), "mini-event");
+      row.dataset.decision = item.event.decision || "none";
+      return row;
+    }));
   }
   $("more-" + kind).hidden = !result.has_more;
   if (kind === "missions") {
@@ -642,6 +652,11 @@ async function execute(body, target = $("decision")) {
   const r = await api("/execute", "agent", "POST", body);
   if (target.id === "story-result") await typingPause();
   decision(r, target, body);
+  if (demo?.mode === "guided" && body.visa_id === sandboxVisa) {
+    if (!r.replayed || !demo.results.has(body.request_id)) demo.results.set(body.request_id, r);
+    demo.verified = false;
+    updateProgress();
+  }
   if (target.id === "story-result") revealResult(target);
   await load("missions");
   if (session.sandbox) renderBudget(body.visa_id, r);
@@ -760,15 +775,17 @@ bind("execute-approved", "click", async () => {
   view("actions");
   await execute(action);
 });
-bind("integrity", "click", async () => {
+async function verifyIntegrity() {
   const r = await api("/audit/integrity");
-  notice(
-    r.valid
-      ? "Local audit chain is consistent. This is not an independently anchored proof of history."
-      : "Local audit chain verification failed.",
-    !r.valid,
-  );
-});
+  notice(r.valid ? "Audit chain verified. The stored history is internally consistent." : "Audit chain verification failed.", r.valid ? "success" : "error");
+  if (demo) {
+    demo.verified = r.valid === true;
+    updateProgress();
+    if (demo.verified && hasGuidedSuccess()) finishDemo();
+  }
+  return r;
+}
+bind("integrity", "click", verifyIntegrity);
 $("sandbox-shortcut").addEventListener("click", () => $("start-sandbox").click());
 async function startSandbox() {
   $("start-sandbox").textContent = "Preparing your sandbox…";
@@ -784,7 +801,10 @@ async function startSandbox() {
     renderBudget(sandboxVisa);
     selectedVisa = data.visa_id;
     $("action-visa").value = data.visa_id;
-    demo = {mode:"guided", stage:"block", review:null, request:null, pendingResult:null};
+    demo = {mode:"guided", stage:"block", review:null, request:null, pendingResult:null, results:new Map(), verified:false};
+    $("demo-finish").hidden = true;
+    $("demo-audit").hidden = true;
+    updateProgress();
     document.body.dataset.workspace = "sandbox";
     $("sandbox-tour").hidden = false;
     $("free-exploration").hidden = true;
@@ -820,6 +840,7 @@ $("skip-typing").addEventListener("click", () => { if (finishTyping) finishTypin
 function exploreFreely() {
   if (!demo) return;
   demo.mode = "explore";
+  $("demo-finish").hidden = true;
   $("sandbox-tour").hidden = true;
   $("free-exploration").hidden = false;
   view("actions");
@@ -881,8 +902,43 @@ bind("inline-run", "click", async () => {
   $("inline-run").hidden = true;
   const r = await execute(action, $("story-result"));
   $("inline-approval").hidden = true;
-  if (r.executed) demo.stage = "audit";
+  if (r.executed) {
+    demo.stage = "audit";
+    $("demo-audit").hidden = false;
+    reviewExpires = null;
+  }
+  updateProgress();
 });
+function hasGuidedSuccess() {
+  if (!demo) return false;
+  return [...demo.results.values()].some(r => r.decision === "DENY") && [...demo.results.values()].some(r => r.executed && r.human_intervention);
+}
+function updateProgress() {
+  if (!demo) return;
+  const values = [...demo.results.values()];
+  const flags = [values.some(r => r.decision === "DENY"), values.some(r => r.executed && r.human_intervention), demo.verified && hasGuidedSuccess()];
+  ["blocked", "approved", "audited"].forEach((name, i) => {
+    const node = $("progress-" + name);
+    node.classList.toggle("complete", flags[i]);
+    node.textContent = (flags[i] ? "✓ " : (i + 1) + " · ") + name[0].toUpperCase() + name.slice(1);
+    if (!flags[i] && (i === 0 || flags[i-1])) node.setAttribute("aria-current", "step");
+    else node.removeAttribute("aria-current");
+  });
+}
+function finishDemo() {
+  const mission = visas.get(sandboxVisa);
+  if (!mission || !hasGuidedSuccess() || !demo.verified) return;
+  const results = [...demo.results.values()];
+  $("finish-summary").textContent = results.filter(r => r.decision === "DENY").length + " blocked · " + results.filter(r => r.executed).length + " approved · " + money(mission.spent) + " spent of " + money(mission.contract.spending_limit) + " · audit chain verified";
+  $("demo-finish").hidden = false;
+  demo.stage = "done";
+  $("demo-audit").hidden = true;
+  view("actions");
+  revealResult($("demo-finish"));
+}
+bind("demo-audit", "click", async () => { await load("audit"); await verifyIntegrity(); });
+bind("explore-finish", "click", exploreFreely);
+bind("restart-demo", "click", startSandbox);
 function renderBudget(id, response = null) {
   const mission = visas.get(id);
   if (!session?.sandbox || !mission) return;
