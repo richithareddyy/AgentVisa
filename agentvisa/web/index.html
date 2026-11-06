@@ -11,7 +11,7 @@
     <meta property="og:image" content="https://agentvisa.onrender.com/dashboard/social-preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="AgentVisa: give your agent a budget and keep the final say." />
+    <meta property="og:image:alt" content="AgentVisa: Give your agent a budget. Keep the final say." />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/dashboard/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/dashboard/style.css" />
@@ -44,12 +44,12 @@
           <h1 id="page-title">Mission control</h1>
         </div>
         <button id="sandbox-shortcut" class="hosted-only">Try sandbox</button>
-        <button id="session-toggle" class="secondary">Owner sign-in</button>
-      </header>
       <div id="sandbox-clock" class="session-clock" hidden>
         <span id="sandbox-countdown" role="timer" aria-live="off"></span>
         <button id="restart-sandbox" class="secondary" hidden>Start a fresh sandbox</button>
       </div>
+        <button id="session-toggle" class="secondary">Owner sign-in</button>
+      </header>
       <div id="decision-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="notice" role="status" aria-live="polite" hidden></div>
       <section id="welcome" class="panel hero hosted-only">
@@ -223,7 +223,7 @@
               <div id="typing" class="typing" hidden><span>AgentVisa is checking…</span><button id="skip-typing" class="text-button">Show response now</button></div>
               <div id="story-result" class="story-result" tabindex="-1" hidden></div>
               <section id="inline-approval" class="approval-notification" hidden aria-label="Purchase approval notification">
-                <span class="step">YOUR SIGNATURE IS NEEDED</span>
+                <span class="visa-stamp ASK_HUMAN">NEEDS YOUR SIGNATURE</span>
                 <h2 id="inline-approval-title"></h2>
                 <p id="inline-deadline" role="timer" aria-live="off"></p>
                 <p id="inline-approval-status">Approving does not spend money. The limits will be checked again when you run it.</p>

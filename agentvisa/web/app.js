@@ -185,6 +185,7 @@ document
   .querySelectorAll(".nav")
   .forEach((e) => e.addEventListener("click", () => view(e.dataset.view)));
 function clear() {
+  $("decision-announcement").replaceChildren();
   demo = null;
   if (finishTyping) finishTyping();
   document.body.dataset.workspace = "owner";
@@ -867,6 +868,10 @@ async function guidedPurchase(kind, exact = null) {
     demo.stage = "review";
     $("sandbox-block").hidden = true;
     $("sandbox-review").hidden = false;
+  } else if (r.executed) {
+    demo.stage = "audit";
+    $("demo-audit").hidden = false;
+    reviewExpires = null;
   } else if (r.decision === "ASK_HUMAN") {
     await inspectReview(session.identity, request.request_id);
     demo.review = structuredClone(inspected);
@@ -896,6 +901,8 @@ bind("inline-approve", "click", async () => {
 bind("inline-reject", "click", async () => {
   await review(false, demo.review);
   demo.review = null;
+  reviewExpires = null;
+  renderBudget(sandboxVisa);
   $("inline-review-buttons").hidden = true;
   $("inline-run").hidden = true;
   $("inline-approval-status").textContent = "You rejected this request. No purchase was made. You can try a fresh request.";
