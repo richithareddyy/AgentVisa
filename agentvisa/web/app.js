@@ -2,7 +2,9 @@
 const $ = (id) => document.getElementById(id),
   visas = new Map(),
   pages = {};
-let sandboxExpires = null,
+let demo = null,
+  finishTyping = null,
+  sandboxExpires = null,
   reviewExpires = null,
   currentView = "missions",
   sandboxVisa = null,
@@ -80,7 +82,7 @@ function controls() {
     .querySelectorAll("button")
     .forEach(
       (b) =>
-        (b.disabled = busy || (b.hasAttribute("data-connected") && !session)),
+        (b.disabled = (busy && b.id !== "skip-typing") || (b.hasAttribute("data-connected") && !session)),
     );
   $("issue").disabled = busy || !session || !draft;
   updateGuide();
@@ -183,6 +185,11 @@ document
   .querySelectorAll(".nav")
   .forEach((e) => e.addEventListener("click", () => view(e.dataset.view)));
 function clear() {
+  demo = null;
+  if (finishTyping) finishTyping();
+  document.body.dataset.workspace = "owner";
+  $("free-exploration").hidden = false;
+  $("inline-approval").hidden = true;
   session = draft = selectedVisa = lastRequest = inspected = imported = sandboxVisa = null;
   $("sandbox-tour").hidden = true;
   $("budget-panel").hidden = true;
@@ -611,7 +618,7 @@ function decision(r, e = $("decision"), action = lastRequest) {
   );
   e.append(el("p", presentation.budget(r), "budget-status"));
   e.append(details(r));
-  if (r.decision === "ASK_HUMAN") {
+  if (r.decision === "ASK_HUMAN" && e.id !== "story-result") {
     const b = el("button", "Review this action", "secondary");
     const pending = lastRequest && structuredClone(lastRequest);
     b.addEventListener("click", () => run(async () => {
@@ -621,20 +628,21 @@ function decision(r, e = $("decision"), action = lastRequest) {
     e.append(b);
   }
 }
-async function execute(body) {
+async function execute(body, target = $("decision")) {
   lastRequest = structuredClone(body);
   $("request-controls").hidden = false;
   $("request-controls").open = false;
   $("request-label").textContent = "Request " + body.request_id;
-  $("decision").replaceChildren(
+  target.replaceChildren(
     el(
       "p",
       "Awaiting response. If interrupted, check status or retry this exact request.",
     ),
   );
   const r = await api("/execute", "agent", "POST", body);
-  decision(r);
-  if (session.sandbox && body.visa_id === sandboxVisa && body.tool === "purchase" && r.executed) $("sandbox-tour").hidden = true;
+  if (target.id === "story-result") await typingPause();
+  decision(r, target, body);
+  if (target.id === "story-result") revealResult(target);
   await load("missions");
   if (session.sandbox) renderBudget(body.visa_id, r);
   notice(
@@ -719,9 +727,8 @@ async function inspectReview(agent, id) {
     d.agent !== session.identity;
   tick();
 }
-async function review(approve) {
-  if (!inspected) return;
-  const d = inspected;
+async function review(approve, d = inspected) {
+  if (!d) return;
   $("review-controls").hidden = true;
   await api("/approvals", "admin", "POST", {
     agent_id: d.agent,
@@ -777,13 +784,17 @@ async function startSandbox() {
     renderBudget(sandboxVisa);
     selectedVisa = data.visa_id;
     $("action-visa").value = data.visa_id;
+    demo = {mode:"guided", stage:"block", review:null, request:null, pendingResult:null};
+    document.body.dataset.workspace = "sandbox";
     $("sandbox-tour").hidden = false;
-    view("actions");
+    $("free-exploration").hidden = true;
+    $("inline-approval").hidden = true;
+    $("story-result").hidden = true;
+    $("guided-recovery").hidden = true;
     $("sandbox-review").hidden = true;
     $("sandbox-block").hidden = false;
-    $("tour-title").textContent = "Will a $450 purchase fit a $300 budget?";
-    $("tour-copy").textContent = "Your agent wants a $450 computer monitor. Try the purchase and see how AgentVisa responds.";
-    $("decision").replaceChildren(el("p", "Try the $450 purchase to see AgentVisa make a decision."));
+    $("agent-line").textContent = "I found a studio monitor. Shall I try buying it?";
+    view("actions");
     tick();
   } finally {
     $("start-sandbox").textContent = "Try this scenario →";
@@ -791,22 +802,86 @@ async function startSandbox() {
 }
 bind("start-sandbox", "click", startSandbox);
 bind("restart-sandbox", "click", startSandbox);
-bind("sandbox-review", "click", async () => {
-  const request = { request_id: crypto.randomUUID(), visa_id: sandboxVisa, tool: "purchase", resource: "vendor:approved", arguments: { product_id: "monitor-pro", quantity: 1 }, context: "" };
-  const result = await execute(request);
-  if (result.decision === "ASK_HUMAN") {
-    view("approvals");
-    await inspectReview(session.identity, request.request_id);
-  }
-});
-bind("sandbox-block", "click", async () => {
-  const result = await execute({ request_id: crypto.randomUUID(), visa_id: sandboxVisa, tool: "purchase", resource: "vendor:approved", arguments: { product_id: "monitor-ultra", quantity: 1 }, context: "" });
-  if (result.decision === "DENY") {
-    $("sandbox-review").hidden = false;
+function revealResult(target) {
+  target.hidden = false;
+  target.scrollIntoView({block:"center", behavior:"instant"});
+  target.focus({preventScroll:true});
+}
+function typingPause() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return Promise.resolve();
+  $("typing").hidden = false;
+  return new Promise(resolve => {
+    const timer = setTimeout(done, 300);
+    function done() { clearTimeout(timer); $("typing").hidden = true; finishTyping = null; resolve(); }
+    finishTyping = done;
+  });
+}
+$("skip-typing").addEventListener("click", () => { if (finishTyping) finishTyping(); });
+function exploreFreely() {
+  if (!demo) return;
+  demo.mode = "explore";
+  $("sandbox-tour").hidden = true;
+  $("free-exploration").hidden = false;
+  view("actions");
+}
+bind("skip-demo", "click", exploreFreely);
+async function guidedPurchase(kind, exact = null) {
+  if (!demo || !session?.sandbox) return;
+  const [tool, resource, args] = scenarios[kind];
+  const request = exact || {request_id:crypto.randomUUID(), visa_id:sandboxVisa, tool, resource, arguments:structuredClone(args), context:""};
+  demo.request = request;
+  demo.kind = kind;
+  $("agent-line").textContent = kind === "ultra" ? "I found a studio monitor. I’m requesting permission to buy it." : "I found a productivity monitor. Can I buy this one?";
+  $("inline-approval").hidden = true;
+  $("guided-recovery").hidden = false;
+  $("story-result").hidden = false;
+  const r = await execute(request, $("story-result"));
+  demo.pendingResult = r;
+  if (Number.isSafeInteger(r.cost_cents)) $("agent-line").textContent = "I found a " + (kind === "ultra" ? "studio" : "productivity") + " monitor for " + money(r.cost_cents) + ". Can I buy it?";
+  if (r.decision === "DENY" && kind === "ultra") {
+    demo.stage = "review";
     $("sandbox-block").hidden = true;
-    $("tour-title").textContent = "Blocked. Now try a purchase within the budget.";
-    $("tour-copy").textContent = "$275 fits the $300 budget, but it is above your $250 approval threshold. Try it to see how approval works.";
+    $("sandbox-review").hidden = false;
+  } else if (r.decision === "ASK_HUMAN") {
+    await inspectReview(session.identity, request.request_id);
+    demo.review = structuredClone(inspected);
+    showInlineApproval();
+    $("sandbox-review").hidden = true;
   }
+  return r;
+}
+function showInlineApproval() {
+  const d = demo.review;
+  $("inline-approval").hidden = false;
+  $("inline-approval-title").textContent = "Your agent is asking permission to spend " + (Number.isSafeInteger(d.cost_cents) ? money(d.cost_cents) : "an unknown amount") + " on " + d.action.arguments.quantity + " × productivity monitor";
+  $("inline-review-buttons").hidden = d.approval_status !== "pending" || d.expired;
+  $("inline-run").hidden = d.approval_status !== "approved" || d.expired;
+  $("inline-approval-status").textContent = d.approval_status === "approved" ? "Signed. No money has been spent yet. Run it to recheck the limits and simulate the purchase." : "Approving does not spend money. Limits are checked again when you run it.";
+  tick();
+  $("inline-approval").scrollIntoView({block:"center",behavior:"instant"});
+}
+bind("sandbox-block", "click", () => guidedPurchase("ultra"));
+bind("sandbox-review", "click", () => guidedPurchase("pro"));
+bind("guided-retry", "click", () => guidedPurchase(demo.kind, demo.request));
+bind("inline-approve", "click", async () => {
+  await review(true, demo.review);
+  demo.review = structuredClone(inspected);
+  showInlineApproval();
+});
+bind("inline-reject", "click", async () => {
+  await review(false, demo.review);
+  demo.review = null;
+  $("inline-review-buttons").hidden = true;
+  $("inline-run").hidden = true;
+  $("inline-approval-status").textContent = "You rejected this request. No purchase was made. You can try a fresh request.";
+  $("sandbox-review").hidden = false;
+});
+bind("inline-run", "click", async () => {
+  const action = structuredClone(demo.review.action);
+  $("inline-run").hidden = true;
+  const r = await execute(action, $("story-result"));
+  $("inline-approval").hidden = true;
+  if (r.executed) demo.stage = "audit";
 });
 function renderBudget(id, response = null) {
   const mission = visas.get(id);
@@ -845,7 +920,12 @@ function tick() {
   }
   if (reviewExpires !== null) {
     $("review-countdown").textContent = "Approval window · " + presentation.countdown(reviewExpires, now) + (now >= reviewExpires ? ". Try a new purchase to request a fresh review." : "");
+    if (demo?.review) $("inline-deadline").textContent = "Review deadline · " + presentation.countdown(reviewExpires, now);
     if (now >= reviewExpires) {
+      $("inline-review-buttons").hidden = true;
+      $("inline-run").hidden = true;
+      if (demo?.review) $("inline-approval-status").textContent = "This review expired. Try a new request to ask again.";
+      if (demo?.mode === "guided") $("sandbox-review").hidden = false;
       $("review-controls").hidden = true;
       $("execute-approved").hidden = true;
     }

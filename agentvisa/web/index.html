@@ -210,23 +210,26 @@
         </section>
       </section>
       <section id="actions-view" class="view" hidden>
-        <aside id="budget-panel" class="panel budget-panel" hidden aria-label="Live mission budget">
-          <span class="step">YOUR AGENT’S VISA</span>
-          <h2 id="budget-label">Mission budget</h2>
-          <div id="budget-track" class="budget-track" role="img"></div>
-          <div class="budget-scale"><span id="budget-limit-label"></span><span>Over budget →</span></div>
-          <p id="budget-threshold" class="hint"></p>
-          <p id="budget-attempt" class="hint" hidden></p>
-          <div class="budget-key"><span>■ Spent</span><span>▧ Attempt</span><span>┆ Approval line</span></div>
-        </aside>
-        <section id="sandbox-tour" class="panel" hidden>
-          <span class="step">YOUR 30-SECOND DEMO</span>
-          <h2 id="tour-title">Will a $450 purchase fit a $300 budget?</h2>
-          <p id="tour-copy">Your agent wants a $450 computer monitor. Try the purchase and see how AgentVisa responds.</p>
-          <button id="sandbox-block">Try the $450 purchase →</button>
-          <button id="sandbox-review" hidden>Try a $275 purchase instead →</button>
-          <p class="hint">Approval cannot override the $300 budget. After approval, choose “Run approved action” to simulate the purchase.</p>
-        </section>
+        <div id="demo-layout" class="demo-layout">
+          <div id="demo-main">
+            <section id="sandbox-tour" class="panel conversation" hidden aria-label="Guided agent conversation">
+              <div class="story-heading"><span class="step">LIVE AGENT DEMO</span><button id="skip-demo" class="text-button">Skip to free explore</button></div>
+              <div id="story-message" class="agent-message"><strong>Agent</strong><p id="agent-line">I found a studio monitor. Shall I try buying it?</p></div>
+              <button id="sandbox-block">Try the studio monitor</button>
+              <button id="sandbox-review" hidden>Try the productivity monitor</button>
+              <div id="typing" class="typing" hidden><span>AgentVisa is checking…</span><button id="skip-typing" class="text-button">Show response now</button></div>
+              <div id="story-result" class="story-result" tabindex="-1" hidden></div>
+              <section id="inline-approval" class="approval-notification" hidden aria-label="Purchase approval notification">
+                <span class="step">YOUR SIGNATURE IS NEEDED</span>
+                <h2 id="inline-approval-title"></h2>
+                <p id="inline-deadline" role="timer" aria-live="off"></p>
+                <p id="inline-approval-status">Approving does not spend money. The limits will be checked again when you run it.</p>
+                <div id="inline-review-buttons"><button id="inline-approve">Approve</button><button id="inline-reject" class="secondary danger">Reject</button></div>
+                <button id="inline-run" hidden>Run it</button>
+              </section>
+              <details id="guided-recovery" hidden><summary>Technical details: request recovery</summary><p>If a response was interrupted, recover the exact request before trying again.</p><button id="guided-retry" class="secondary">Retry exact request</button></details>
+            </section>
+            <div id="free-exploration">
         <div class="intro">
           <h2>See where authority stops.</h2>
           <p>
@@ -276,6 +279,20 @@
               ><button id="retry" class="secondary">Retry exact request</button>
             </details>
           </section>
+        </div>
+            </div>
+          </div>
+          <div id="demo-rail">
+        <aside id="budget-panel" class="panel budget-panel" hidden aria-label="Live mission budget">
+          <span class="step">YOUR AGENT’S VISA</span>
+          <h2 id="budget-label">Mission budget</h2>
+          <div id="budget-track" class="budget-track" role="img"></div>
+          <div class="budget-scale"><span id="budget-limit-label"></span><span>Over budget →</span></div>
+          <p id="budget-threshold" class="hint"></p>
+          <p id="budget-attempt" class="hint" hidden></p>
+          <div class="budget-key"><span>■ Spent</span><span>▧ Attempt</span><span>┆ Approval line</span></div>
+        </aside>
+          </div>
         </div>
       </section>
       <section id="approvals-view" class="view" hidden>
