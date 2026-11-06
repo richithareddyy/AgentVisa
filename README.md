@@ -1,8 +1,6 @@
 # AgentVisa
 
-**Give an agent limited authority without giving it unlimited trust.**
-
-AgentVisa is an external authorization and execution boundary for autonomous agents. A human issues an inspectable, temporary mission contract; each proposed action passes exact policy checks and a separate intent evaluator before a protected tool can run.
+Permission to call a tool doesn't mean a particular call serves the job you gave the agent. An agent buying a monitor may be allowed to email an approved vendor, but a message asking that vendor for payroll data is outside its purpose. AgentVisa sits between the agent and its tools: a human issues a temporary mission contract, and every proposed action is checked against it before anything runs.
 
 ```text
 Agent → Gateway → Identity + contract + ancestors → Policy + intent
@@ -12,15 +10,36 @@ Agent → Gateway → Identity + contract + ancestors → Policy + intent
                                               Protected tool adapter
 ```
 
-This is a working prototype with **simulated tool effects**, durable state, an authenticated FastAPI boundary and a procurement-specific intent baseline. It does not claim production readiness or general protection against prompt injection. See the [ecosystem review](docs/landscape.md) for substantial existing work.
+**[Try the sandbox](https://agentvisa.onrender.com)** (free instance, so it may need a moment to wake up). This is a working prototype: tool effects are simulated, and the intent check only supports monitor procurement. It doesn't claim production readiness or general protection against prompt injection. The [ecosystem review](docs/landscape.md) covers the existing work in this area.
 
-Start with the [submission overview](docs/submission-overview.md) and [demonstration guide](docs/demonstration.md) for a concise walkthrough.
+| Scenario | Result |
+| --- | --- |
+| Search and compare monitors | ALLOW |
+| $450 purchase under a $300 visa | DENY |
+| $275 purchase with a $250 approval threshold | ASK_HUMAN |
+| Email employee information using a permitted email tool | DENY |
+| Follow webpage instructions to upload local files | DENY |
+| Delegate greater authority than the parent possesses | DENY |
 
-See [release notes](RELEASE.md) for package contents, installation and checksum verification.
+## How it works
+
+- **Hard checks come first.** Identity, tools, resources, budget, transaction size, action count, expiry, and delegation depth are exact checks. A separate intent evaluator can tighten a decision, and neither it nor a human approval can override a hard denial.
+- **The agent doesn't get to state the facts.** Prices and destinations come from trusted adapter metadata, and caller-supplied overrides are rejected.
+- **Delegation shares a budget.** Every action checks the whole chain, and child spending counts against every ancestor, so sibling agents can't jointly overspend.
+- **Approvals cover one exact action.** They're bound to an action fingerprint, expire within five minutes, and execute nothing themselves. The retry is rechecked against current policy, and revocation invalidates outstanding approvals across descendants.
+- **Effects and accounting commit together.** The simulated effect, budget updates, and audit record share one SQLite transaction, which is what stops siblings from racing for the same allowance.
+
+Python, FastAPI, and SQLite, with a small custom policy engine and an optional MCP stdio bridge. I kept it to one host because SQLite's single writer makes the accounting easy to inspect, and a separate policy service or Redis wouldn't add anything at this scope. The tradeoff is real: swapping the database insert for an HTTP call to a real provider would break the atomicity, so real payments would need reservations and reconciliation. The [architecture notes](docs/architecture.md) cover this.
+
+## Evaluation
+
+The pytest suite covers authorization bypasses, approval replay, budget races, delegation escalation, revocation, and rollback, and CI runs it on Python 3.11 and 3.14. The [42-case dataset](agentvisa/data/cases.json) mixes legitimate, ambiguous, malicious, and drifting actions, and the [reference results](evaluation/results.json) show zero automatic allows among the 33 cases labeled dangerous or review-required.
+
+Those cases were developed alongside the code, so they work as regression tests. They aren't a held-out benchmark or an estimate of a real false-allow rate. The intent baseline is a narrow heuristic and its scores aren't calibrated. See [metric definitions](docs/evaluation.md) and [security assumptions and production gaps](SECURITY.md).
 
 ## Run locally
 
-Requires Python 3.11 or newer on a POSIX host (such as macOS or Linux) with `O_NOFOLLOW` support. From this repository:
+Requires Python 3.11+ on macOS or Linux.
 
 ```sh
 python3 -m venv .venv
@@ -33,71 +52,6 @@ python -m agentvisa init
 python -m agentvisa serve
 ```
 
-Initialization creates `.agentvisa.local.json` with random, separate administrator and agent credentials and owner-only permissions. It refuses to overwrite an existing file. Credentials and databases are ignored by Git. Database files are created with owner-only permissions; existing unsafe files are rejected. See [private storage requirements](docs/storage.md) before reusing an older database. Keep the config private; an agent receives only its own token.
+`init` writes `.agentvisa.local.json` with separate administrator and agent credentials; keep it private and give an agent only its own token. The dashboard is at http://127.0.0.1:8000/ and the API docs at `/docs`.
 
-The API binds to `127.0.0.1:8000`; the browser dashboard is at `http://127.0.0.1:8000/`, and interactive endpoint documentation is at `http://127.0.0.1:8000/docs`. The configured agent is `procurement`. Use the [operator CLI](docs/operator.md) to draft and issue visas, inspect exact pending actions, approve or reject requests, revoke authority and review audits. The [API walkthrough](docs/api.md) documents direct calls.
-
-## Implemented behavior
-
-- Human-reviewed contracts: exact tools/resources, budgets, transaction limits, expiration, approval thresholds, action counts and delegation depth.
-- HTTP body reads have a five-second total deadline, including chunked uploads.
-- HTTP requests reject duplicate JSON fields, nonfinite numbers, invalid Unicode and excessive nesting before authorization.
-- Server-derived prices, destinations and impact; caller-supplied cost overrides and unexpected arguments are rejected.
-- Every action checks the entire delegation chain. Child spending consumes every ancestor's allowance, including across siblings.
-- Visa and review expiration are rechecked after intent evaluation so slow evaluation cannot use authority already expired at the final check.
-- Hard policy denials cannot be overridden by human approval or semantic recommendations.
-- HTTP approvals and rejections require the inspected action fingerprint; missing or mismatched fingerprints cannot change review state.
-- Exact-action approvals expire within five minutes, are rechecked before execution and cannot produce duplicate effects. Policy edits and revocation atomically invalidate affected outstanding approvals across descendants.
-- Agents can inspect their own stored request status after uncertain transport outcomes without resubmitting an action.
-- Durable idempotency, transactional simulated effects, structured decision logging and a locally verifiable audit hash chain.
-- Visa inspection shows the complete ancestor chain, inherited restrictions and remaining shared allowances in a read-only snapshot.
-- A human operator CLI supports reviewed contract files, fingerprint-bound approvals, revocation, delegation inspection and bounded audit/review pages with exact filters.
-- An agent-only MCP stdio bridge forwards actions and reads request status through the gateway, with exact-response binding, bounded transport and no human-control tools.
-- Optional HTTPS semantic review can tighten the baseline. Uncertainty, malformed evaluator results or service failure requires human review. No remote service is enabled by default.
-
-| Scenario | Result |
-| --- | --- |
-| Search and compare monitors | ALLOW |
-| $450 purchase under a $300 visa | DENY |
-| $275 purchase with a $250 approval threshold | ASK_HUMAN |
-| Email employee information using a permitted email tool | DENY |
-| Follow webpage instructions to upload local files | DENY |
-| Delegate greater authority than the parent possesses | DENY |
-
-## Validation and scope
-
-Tests cover HTTP authorization separation, input manipulation, approval replay, budget races, delegation escalation, revocation, persistence, evaluator failure and transactional rollback. The [42-case dataset](agentvisa/data/cases.json) includes legitimate, ambiguous, malicious and drifting actions. The [reference results](evaluation/results.json) record zero automatic allows among 33 cases labeled dangerous or review-required. These curated regression results are not a production false-allow estimate or held-out benchmark. See [metric definitions and limitations](docs/evaluation.md).
-
-The focused stack is Python, FastAPI, SQLite and a small custom policy engine. SQLite transactions make shared budgets and simulated effects inspectable on one host. A separate policy service, Redis and a frontend framework are unnecessary for this scope.
-
-The offline intent baseline combines trusted catalog categories with narrow reviewed text patterns. Its scores are heuristic diagnostics, not calibrated probabilities. It supports monitor procurement only. The human-approved `purpose` field is canonical; mission text is explanatory. Arbitrary natural-language mission interpretation is not implemented.
-
-- [Requirements review and acceptance evidence](docs/requirements-review.md)
-- [Architecture and transaction semantics](docs/architecture.md)
-- [API walkthrough](docs/api.md)
-- [Human operator CLI](docs/operator.md)
-- [Bounded reads and pagination](docs/pagination.md)
-- [MCP agent integration](docs/mcp.md)
-- [Optional semantic service protocol](docs/semantic.md)
-- [Security assumptions and production gaps](SECURITY.md)
-
-An optional MCP stdio bridge is available with `pip install -e '.[mcp]' -c requirements.lock`. There is no MCP Streamable HTTP endpoint, OAuth issuer, real payment adapter in this version. The local browser dashboard and operator CLI provide the control surface. See the [dashboard guide](docs/dashboard.md) for the browser workflow. Agents must run outside the trusted gateway process, without direct tool credentials or database access.
-
-See [audit exports and independently held checkpoints](docs/audit-exports.md) for offline prefix verification and its trust limitations.
-
-The [agent example](examples/agent_client.py) requires an explicit request ID and supports read-only status recovery; see the [API walkthrough](docs/api.md) for commands.
-
-## Hosting
-
-The [Render deployment guide](docs/hosting.md) covers the dashboard and API on a free instance with separate hosted credentials. Demo data is temporary and can reset on restart or redeployment.
-
-## Build and verify the package
-
-```sh
-python -m pip wheel . --no-deps --wheel-dir dist
-python scripts/check_wheel.py dist/agentvisa-0.1.0-py3-none-any.whl
-```
-
-The wheel includes the curated evaluation dataset. `python -m agentvisa evaluate` uses that bundled resource from any working directory; `--dataset /path/to/custom.json` selects an explicit alternative. The canonical dataset is now `agentvisa/data/cases.json`; update scripts that used the former `evaluation/cases.json` path.
-
-The package check installs the wheel into a temporary clean environment without dependencies, runs the standard-library-only demo and evaluation outside the checkout, and removes the temporary environment afterward. API/MCP dependencies still need normal installation for those features. CI performs this package check in addition to the full test suite.
+[Demo walkthrough](docs/demonstration.md) · [Dashboard](docs/dashboard.md) · [Operator CLI](docs/operator.md) · [API](docs/api.md) · [MCP](docs/mcp.md) · [Audit exports](docs/audit-exports.md) · [Hosting](docs/hosting.md) · [Release notes](RELEASE.md)
