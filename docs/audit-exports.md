@@ -3,9 +3,9 @@
 An administrator can capture the current audit head, protect that checkpoint separately, and export exactly the history ending at that head. New events arriving during export are excluded. Files are private (mode 0600), published only after successful verification, and never overwrite existing paths. The destination filesystem must support hard links. Audit exports may contain sensitive mission and action information; store them accordingly.
 
 ```sh
-python -m agentvisa.operator --config credentials.json checkpoint --output checkpoint.json
-python -m agentvisa.operator --config credentials.json export-audit --checkpoint checkpoint.json --output audit.ndjson
-python -m agentvisa.audit_verify --checkpoint checkpoint.json --audit audit.ndjson
+python -m nodi.operator --config credentials.json checkpoint --output checkpoint.json
+python -m nodi.operator --config credentials.json export-audit --checkpoint checkpoint.json --output audit.ndjson
+python -m nodi.audit_verify --checkpoint checkpoint.json --audit audit.ndjson
 ```
 
 The last command is offline, needs no credentials or running gateway, and returns exit code 0 on success or 1 on failure. Save the checkpoint to separately controlled storage before relying on it as evidence. These commands do not automatically establish a trusted timestamp or external anchor.

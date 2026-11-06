@@ -1,9 +1,9 @@
 import json
 from dataclasses import replace
 import pytest
-from agentvisa.gateway import Gateway
-from agentvisa.models import Action, draft
-from agentvisa.queries import ReadModel
+from nodi.gateway import Gateway
+from nodi.models import Action, draft
+from nodi.queries import ReadModel
 
 
 @pytest.fixture

@@ -2,9 +2,9 @@ import asyncio
 import json
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import BodyLimit, create_app
-from agentvisa.gateway import Gateway
-from agentvisa.json_input import validate_json
+from nodi.api import BodyLimit, create_app
+from nodi.gateway import Gateway
+from nodi.json_input import validate_json
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def test_non_json_body_rejected(system, content_type):
     assert client.post('/drafts', content=b'{}', headers=headers).status_code == 415
 
 
-@pytest.mark.parametrize('content_type', ['application/json', 'application/json; charset=utf-8', 'application/vnd.agentvisa+json'])
+@pytest.mark.parametrize('content_type', ['application/json', 'application/json; charset=utf-8', 'application/vnd.nodi+json'])
 def test_supported_json_and_unicode(system, content_type):
     _, client = system
     response = client.post('/drafts', content=json.dumps({'mission': 'Buy a monitor under $300.', 'agent_id': 'café'}).encode(), headers={'Content-Type': content_type, 'Authorization': 'Bearer ' + 'a'*40})

@@ -549,7 +549,7 @@ header:has(#page-heading[hidden]) { justify-content: flex-end; margin-bottom: 16
 .agent-message strong { display:block;font-size:12px;color:#20583e;text-transform:uppercase;letter-spacing:1px; }
 .agent-message p { margin:6px 0 0;font-size:20px;color:#20372e;line-height:1.4; }
 .story-result { border-left:3px solid #dce3d9;padding:18px 0 0 18px;margin-top:20px; }
-.story-result::before { content:"AgentVisa";display:block;font-size:12px;letter-spacing:1px;font-weight:700;margin-bottom:16px; }
+.story-result::before { content:"Nodi";display:block;font-size:12px;letter-spacing:1px;font-weight:700;margin-bottom:16px; }
 .approval-notification { margin-top:18px;padding:20px;border:1px solid #b98520;border-radius:16px;background:#fff8e8;box-shadow:0 8px 24px #7951000d; }
 .approval-notification h2 { font-size:20px; }
 .approval-notification .step { color:#795100;margin-bottom:10px; }

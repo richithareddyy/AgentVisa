@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.gateway import Gateway
+from nodi.api import create_app
+from nodi.gateway import Gateway
 
 
 def test_dashboard_has_no_credentials_or_authority(tmp_path):
@@ -17,7 +17,7 @@ def test_dashboard_has_no_credentials_or_authority(tmp_path):
         assert admin not in r.text and agent not in r.text
     assert client.get('/visas').status_code == 401
     assert client.post('/approvals', json={}).status_code in (401, 422)
-    assert client.get('/dashboard/.agentvisa.local.json').status_code == 404
+    assert client.get('/dashboard/.nodi.local.json').status_code == 404
     assert client.get('/dashboard/api.py').status_code == 404
     assert client.get('/dashboard/index.html').status_code == 404
 

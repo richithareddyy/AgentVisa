@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>AgentVisa · Give your agent a budget. Keep the final say.</title>
+    <title>Nodi · Give your agent a budget. Keep the final say.</title>
     <meta name="description" content="Give AI agents a spending visa with a budget, human approval, revocation, and an audit trail. Try an isolated sandbox with simulated purchases." />
     <meta property="og:title" content="Give your agent a budget. Keep the final say." />
     <meta property="og:description" content="Try a purchase, see it blocked, and approve a request in a free, isolated sandbox. No account or real money needed." />
@@ -11,7 +11,7 @@
     <meta property="og:image" content="https://agentvisa.onrender.com/dashboard/social-preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="AgentVisa: Give your agent a budget. Keep the final say." />
+    <meta property="og:image:alt" content="Nodi: Give your agent a budget. Keep the final say." />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="/dashboard/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/dashboard/style.css" />
@@ -20,8 +20,8 @@
   </head>
   <body data-hosted="false">
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="AgentVisa home"
-        ><span class="mark">V</span>AgentVisa</a
+      <a class="brand" href="/" aria-label="Nodi home"
+        ><span class="mark">N</span>Nodi</a
       >
       <div class="workspace">LOCAL WORKSPACE</div>
       <nav aria-label="Main navigation">
@@ -53,13 +53,13 @@
       <div id="decision-announcement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
       <div id="notice" role="status" aria-live="polite" hidden></div>
       <section id="welcome" class="panel hero hosted-only">
-        <span class="step">WHAT AGENTVISA DOES</span>
+        <span class="step">WHAT NODI DOES</span>
         <h1>Give your agent a budget.<br />Keep the final say.</h1>
-        <p>AgentVisa controls what an AI agent is allowed to do. Give the agent a mission, set its budget, and decide which actions need your approval.</p>
-        <p>Before an action runs, AgentVisa checks those rules. It allows actions within the limits, pauses actions that need your approval, and blocks actions outside the mission. Each decision is recorded so you can review what happened.</p>
-        <ol class="how-it-works" aria-label="How AgentVisa works">
+        <p>Nodi controls what an AI agent is allowed to do. Give the agent a mission, set its budget, and decide which actions need your approval.</p>
+        <p>Before an action runs, Nodi checks those rules. It allows actions within the limits, pauses actions that need your approval, and blocks actions outside the mission. Each decision is recorded so you can review what happened.</p>
+        <ol class="how-it-works" aria-label="How Nodi works">
           <li><strong>Define the mission</strong><span>Choose what the agent may do and how much it may spend.</span></li>
-          <li><strong>Check each action</strong><span>AgentVisa checks the mission, permissions, and spending limits.</span></li>
+          <li><strong>Check each action</strong><span>Nodi checks the mission, permissions, and spending limits.</span></li>
           <li><strong>Stay in control</strong><span>Approve requests, revoke permission, and review the activity history.</span></li>
         </ol>
         <section class="scenario-intro" aria-labelledby="example-title">
@@ -82,7 +82,7 @@
           <div>
             <h2>Connect your local workspace</h2>
             <p>
-              Choose the private configuration created by AgentVisa to get
+              Choose the private configuration created by Nodi to get
               started.
             </p>
           </div>
@@ -96,15 +96,15 @@
             accept=".json,application/json"
         /></label>
         <p class="hint">
-          Select <code>.agentvisa.local.json</code> inside your AgentVisa
+          Select <code>.nodi.local.json</code> inside your Nodi
           folder. In the Mac file picker, press Command + Shift + . to show
           hidden files. On Windows, enable View → Show → Hidden items; on Linux, press Ctrl + H. The file is read locally; credentials stay in this
           page’s memory until you disconnect or reload.
         </p>
         </div>
         <div class="hosted-only">
-          <p>Open your AgentVisa service in Render → Environment. Copy each secret into its matching field below. These are the two secrets you generated when deploying.</p>
-          <p class="hint">Use AGENTVISA_ADMIN_TOKEN for the administrator and AGENTVISA_AGENT_TOKEN for the agent. Keep both private. You will need to reconnect after reloading this page.</p>
+          <p>Open your Nodi service in Render → Environment. Copy each secret into its matching field below. These are the two secrets you generated when deploying.</p>
+          <p class="hint">Use NODI_ADMIN_TOKEN for the administrator and NODI_AGENT_TOKEN for the agent. Keep both private. You will need to reconnect after reloading this page.</p>
         </div>
         <details id="manual-connection">
           <summary>Use owner credentials</summary>
@@ -220,7 +220,7 @@
               <div id="story-message" class="agent-message"><strong>Agent</strong><p id="agent-line">I found a studio monitor. Shall I try buying it?</p></div>
               <button id="sandbox-block">Try the studio monitor</button>
               <button id="sandbox-review" hidden>Try the productivity monitor</button>
-              <div id="typing" class="typing" hidden><span>AgentVisa is checking…</span><button id="skip-typing" class="text-button">Show response now</button></div>
+              <div id="typing" class="typing" hidden><span>Nodi is checking…</span><button id="skip-typing" class="text-button">Show response now</button></div>
               <div id="story-result" class="story-result" tabindex="-1" hidden></div>
               <section id="inline-approval" class="approval-notification" hidden aria-label="Purchase approval notification">
                 <span class="visa-stamp ASK_HUMAN">NEEDS YOUR SIGNATURE</span>
@@ -384,7 +384,7 @@
       </section>
       <p class="hint hosted-only storage-note">Temporary demo: sandboxes expire after 15 minutes. Free hosting may wake slowly, and stored data can reset after restarts or redeployments. Use sample data only.</p>
       <footer>
-        AgentVisa <span>Give your agent a budget. Keep the final say.</span
+        Nodi <span>Give your agent a budget. Keep the final say.</span
         ><a href="/docs" target="_blank" rel="noopener">API reference ↗</a>
       </footer>
     </main>

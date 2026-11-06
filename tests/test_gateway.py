@@ -2,9 +2,9 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 import sqlite3
 import pytest
-from agentvisa.gateway import Gateway
-from agentvisa.intent import Intent
-from agentvisa.models import Action, Contract, draft
+from nodi.gateway import Gateway
+from nodi.intent import Intent
+from nodi.models import Action, Contract, draft
 
 
 @pytest.fixture

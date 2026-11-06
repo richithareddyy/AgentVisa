@@ -2,10 +2,10 @@ import hashlib
 import io
 import json
 from pathlib import Path
-from agentvisa.dataset import load_dataset
-from agentvisa.evaluation import run
+from nodi.dataset import load_dataset
+from nodi.evaluation import run
 
-SOURCE = Path(__file__).parents[1] / 'agentvisa' / 'data' / 'cases.json'
+SOURCE = Path(__file__).parents[1] / 'nodi' / 'data' / 'cases.json'
 
 
 def test_bundled_report_hash_and_all_denominators():

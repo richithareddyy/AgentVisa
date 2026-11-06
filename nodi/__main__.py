@@ -8,15 +8,15 @@ import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="agentvisa")
+    parser = argparse.ArgumentParser(prog="nodi")
     parser.add_argument("command", choices=["init", "serve", "demo", "evaluate"])
-    parser.add_argument("--config", default=".agentvisa.local.json")
+    parser.add_argument("--config", default=".nodi.local.json")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--dataset", help="Custom evaluation JSON; defaults to the bundled regression dataset")
     parser.add_argument("--output")
     args = parser.parse_args()
     if args.command == "init":
-        config = {"admin_token": secrets.token_urlsafe(32), "agent_tokens": {secrets.token_urlsafe(32): "procurement"}, "database": "agentvisa.db"}
+        config = {"admin_token": secrets.token_urlsafe(32), "agent_tokens": {secrets.token_urlsafe(32): "procurement"}, "database": "nodi.db"}
         fd = os.open(args.config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(fd, "w") as file:
             json.dump(config, file, indent=2)

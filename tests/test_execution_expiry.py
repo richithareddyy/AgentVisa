@@ -1,8 +1,8 @@
 from dataclasses import replace
 import pytest
-from agentvisa.gateway import Gateway
-from agentvisa.intent import ProcurementEvaluator
-from agentvisa.models import Action, draft
+from nodi.gateway import Gateway
+from nodi.intent import ProcurementEvaluator
+from nodi.models import Action, draft
 
 
 @pytest.fixture

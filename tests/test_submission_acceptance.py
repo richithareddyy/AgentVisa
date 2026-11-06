@@ -1,8 +1,8 @@
 from dataclasses import replace
 import pytest
-from agentvisa.demo import run
-from agentvisa.gateway import Gateway
-from agentvisa.models import Action, draft
+from nodi.demo import run
+from nodi.gateway import Gateway
+from nodi.models import Action, draft
 
 
 @pytest.fixture(scope='module')

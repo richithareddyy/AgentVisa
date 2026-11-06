@@ -14,12 +14,12 @@ HEADERS = {
 
 def install_dashboard(app):
     def asset(name, media_type):
-        content = files("agentvisa").joinpath("web", name).read_bytes()
+        content = files("nodi").joinpath("web", name).read_bytes()
         if name == "index.html" and getattr(app.state, "hosted_demo", False):
             content = content.replace(b'data-hosted="false"', b'data-hosted="true"')
             content = content.replace(b"LOCAL WORKSPACE", b"HOSTED DEMO")
             content = content.replace(b"Connect your local workspace", b"Connect your hosted workspace")
-            content = content.replace(b"Choose the private configuration created by AgentVisa to get\n              started.", b"Enter your two hosted access tokens below to connect securely.")
+            content = content.replace(b"Choose the private configuration created by Nodi to get\n              started.", b"Enter your two hosted access tokens below to connect securely.")
         return Response(content, media_type=media_type, headers=HEADERS)
 
     @app.get("/", include_in_schema=False)

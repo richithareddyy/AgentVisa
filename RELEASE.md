@@ -1,4 +1,4 @@
-# AgentVisa 0.1.0 — portfolio prototype
+# Nodi 0.1.0 — portfolio prototype
 
 Release date: October 28, 2026.
 
@@ -8,8 +8,8 @@ Start with the [submission overview](docs/submission-overview.md), then follow t
 
 ## Distribution
 
-- `AgentVisa.zip`: tracked source, tests, documentation and dependency constraints; excludes Git internals, environments, local credentials and databases.
-- `agentvisa-0.1.0-py3-none-any.whl`: installable Python package with the bundled evaluation dataset.
+- `Nodi.zip`: tracked source, tests, documentation and dependency constraints; excludes Git internals, environments, local credentials and databases.
+- `nodi-0.1.0-py3-none-any.whl`: installable Python package with the bundled evaluation dataset.
 - `release-manifest.json`: exact source commit, final CI result, local verification summary and artifact SHA-256 values.
 - `SHA256SUMS`: checksums for the ZIP, wheel and manifest. Run `shasum -a 256 -c SHA256SUMS` from the download directory on macOS, or `sha256sum -c SHA256SUMS` on Linux.
 
@@ -17,12 +17,12 @@ Checksums detect accidental file changes relative to the supplied list. They are
 
 ## Installation
 
-The supported environment is Python 3.11 or newer on macOS/Linux with POSIX `O_NOFOLLOW`. Extract the source ZIP, enter its AgentVisa directory, and follow the README’s constrained virtual-environment installation. For a wheel installation from that directory, use:
+The supported environment is Python 3.11 or newer on macOS/Linux with POSIX `O_NOFOLLOW`. Extract the source ZIP, enter its Nodi directory, and follow the README’s constrained virtual-environment installation. For a wheel installation from that directory, use:
 
 ```sh
-python -m pip install /path/to/agentvisa-0.1.0-py3-none-any.whl -c requirements.lock
-python -m agentvisa demo
-python -m agentvisa evaluate
+python -m pip install /path/to/nodi-0.1.0-py3-none-any.whl -c requirements.lock
+python -m nodi demo
+python -m nodi evaluate
 ```
 
 Install the source extras described in the README for tests and MCP. The wheel alone does not install the repository’s documentation, example scripts or tests. No public package-index publication or hosted service is part of this release.

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from agentvisa.sandbox import Sandbox
+from nodi.sandbox import Sandbox
 
 
 def setup(**kwargs):
@@ -76,10 +76,10 @@ def test_capacity_request_and_creation_limits():
 
 
 def test_sandbox_tokens_cannot_access_owner_app(monkeypatch, tmp_path):
-    from agentvisa.hosted import create_hosted_app
-    monkeypatch.setenv('AGENTVISA_ADMIN_TOKEN', 'a' * 40)
-    monkeypatch.setenv('AGENTVISA_AGENT_TOKEN', 'b' * 40)
-    monkeypatch.setenv('AGENTVISA_DB', str(tmp_path / 'owner.db'))
+    from nodi.hosted import create_hosted_app
+    monkeypatch.setenv('NODI_ADMIN_TOKEN', 'a' * 40)
+    monkeypatch.setenv('NODI_AGENT_TOKEN', 'b' * 40)
+    monkeypatch.setenv('NODI_DB', str(tmp_path / 'owner.db'))
     client = TestClient(create_hosted_app())
     data = client.post('/sandbox/start').json()
     assert client.get('/visas', headers=headers(data)).status_code == 401

@@ -14,7 +14,7 @@ from .policy import attenuation, checks
 from .tools import prepare
 from .storage import private_database
 
-logger = logging.getLogger("agentvisa.decisions")
+logger = logging.getLogger("nodi.decisions")
 
 
 def encode(value) -> str:

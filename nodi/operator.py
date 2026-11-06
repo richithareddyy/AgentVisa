@@ -59,9 +59,9 @@ def page_arguments(command):
 
 
 def parser():
-    root = argparse.ArgumentParser(prog="python -m agentvisa.operator")
+    root = argparse.ArgumentParser(prog="python -m nodi.operator")
     root.add_argument("--url", default="http://127.0.0.1:8000", help="Trusted gateway origin")
-    root.add_argument("--config", help="Private JSON containing admin_token; otherwise use AGENTVISA_ADMIN_TOKEN")
+    root.add_argument("--config", help="Private JSON containing admin_token; otherwise use NODI_ADMIN_TOKEN")
     commands = root.add_subparsers(dest="command", required=True)
     draft = commands.add_parser("draft")
     draft.add_argument("--mission", required=True)
@@ -170,7 +170,7 @@ def run(args, client: ControlClient):
 def main(argv=None):
     args = parser().parse_args(argv)
     try:
-        token = json.loads(Path(args.config).read_text())["admin_token"] if args.config else os.environ["AGENTVISA_ADMIN_TOKEN"]
+        token = json.loads(Path(args.config).read_text())["admin_token"] if args.config else os.environ["NODI_ADMIN_TOKEN"]
         result = run(args, ControlClient(args.url, token))
         # Escaping control characters keeps untrusted agent text inert in terminals.
         print(json.dumps(result, indent=2, ensure_ascii=True))

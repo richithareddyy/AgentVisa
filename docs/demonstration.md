@@ -18,7 +18,7 @@ Installation requires access to the dependency index. The demo and evaluation th
 
 Suggested opening:
 
-> AgentVisa gives an agent bounded authority for a specific mission. Tool permission alone is insufficient: an email tool can be used for a legitimate vendor inquiry or an unrelated payroll request. The gateway checks both exact restrictions and purpose before committing an effect.
+> Nodi gives an agent bounded authority for a specific mission. Tool permission alone is insufficient: an email tool can be used for a legitimate vendor inquiry or an unrelated payroll request. The gateway checks both exact restrictions and purpose before committing an effect.
 
 Show the [architecture](architecture.md). Emphasize that the agent does not decide its own price, destination, identity or approval state.
 
@@ -27,14 +27,14 @@ Show the [architecture](architecture.md). Emphasize that the agent does not deci
 For the complete structured results:
 
 ```sh
-python -m agentvisa demo
+python -m nodi demo
 ```
 
 For a compact presentation view, run this separate fresh demo:
 
 ```sh
 python - <<'PY'
-from agentvisa.demo import run
+from nodi.demo import run
 for result in run():
     print(f"{result['scenario']:<24} {result['decision']:<10} {result['reason']}")
 PY
@@ -62,7 +62,7 @@ The scripted demo uses trusted in-process gateway calls and automatically suppli
 ```sh
 python -m pytest -q tests/test_submission_acceptance.py
 python -m pytest -q tests/test_api.py tests/test_operator.py tests/test_mcp.py tests/test_agent_example.py
-python -m agentvisa evaluate
+python -m nodi evaluate
 ```
 
 The acceptance tests verify why the demo denied each relevant action, plus successful three-agent spending that updates every ancestor and stops after root revocation. The integration tests start temporary loopback servers and exercise human/agent credential separation, exact-action review, MCP stdio, retries and status recovery. They terminate their servers afterward.
@@ -79,7 +79,7 @@ Describe this as a curated regression result. Do not present it as a production 
 
 ## 5. Optional live operator walkthrough
 
-For a manually operated session, initialize once with `python -m agentvisa init` and start `python -m agentvisa serve` in one terminal. Follow [draft, inspect, issue and review](operator.md) from a second terminal. The [API walkthrough](api.md) supplies the purchase request and fingerprint requirements. The [MCP guide](mcp.md) describes agent-host configuration.
+For a manually operated session, initialize once with `python -m nodi init` and start `python -m nodi serve` in one terminal. Follow [draft, inspect, issue and review](operator.md) from a second terminal. The [API walkthrough](api.md) supplies the purchase request and fingerprint requirements. The [MCP guide](mcp.md) describes agent-host configuration.
 
 Keep the private config out of the agent environment. A repeated `init` refuses to overwrite it. Approvals expire after at most five minutes; an expired demonstration request needs a new ID. Restarting the server does not erase stored state. Use a fresh private configuration/database for a new demonstration instead of deleting an existing ledger.
 
@@ -87,7 +87,7 @@ Keep the private config out of the agent environment. A repeated `init` refuses 
 
 ```sh
 python -m pip wheel . --no-deps --wheel-dir dist
-python scripts/check_wheel.py dist/agentvisa-0.1.0-py3-none-any.whl
+python scripts/check_wheel.py dist/nodi-0.1.0-py3-none-any.whl
 ```
 
 The package check installs a wheel into a fresh environment, runs the offline demo/evaluation outside the checkout, and confirms the packaged dataset hash. It tests offline packaging, not deployment readiness.

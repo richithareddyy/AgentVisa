@@ -1,15 +1,15 @@
 # Human operator workflow
 
-The operator CLI uses only authenticated human-control routes. It never calls `/execute` and never reads or writes the gateway database directly. It can use an administrator-only JSON file containing `admin_token`, or `AGENTVISA_ADMIN_TOKEN` from its environment. Do not put credentials in command-line arguments, source control or agent configuration.
+The operator CLI uses only authenticated human-control routes. It never calls `/execute` and never reads or writes the gateway database directly. It can use an administrator-only JSON file containing `admin_token`, or `NODI_ADMIN_TOKEN` from its environment. Do not put credentials in command-line arguments, source control or agent configuration.
 
-For a local development session, the private config created by `python -m agentvisa init` is also accepted. Start the gateway in another terminal with `python -m agentvisa serve`.
+For a local development session, the private config created by `python -m nodi init` is also accepted. Start the gateway in another terminal with `python -m nodi serve`.
 
 All examples assume the repository root and activated virtual environment. Global flags precede the command. Add `--url https://your-gateway.example` before the command for a trusted remote origin; loopback `http://127.0.0.1:8000` is the default.
 
 ## Draft, inspect and issue a visa
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json draft \
+python -m nodi.operator --config .nodi.local.json draft \
   --agent procurement --mission 'Buy a monitor under $300.' --output monitor-contract.json
 ```
 
@@ -18,8 +18,8 @@ Open the contract file and review tools, resources, spending limit, maximum tran
 After reviewing or editing it:
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json issue --contract monitor-contract.json
-python -m agentvisa.operator --config .agentvisa.local.json visas
+python -m nodi.operator --config .nodi.local.json issue --contract monitor-contract.json
+python -m nodi.operator --config .nodi.local.json visas
 ```
 
 Give the returned visa ID and its own credential to the agent. Do not give it the human config.
@@ -27,8 +27,8 @@ Give the returned visa ID and its own credential to the agent. Do not give it th
 ## Inspect pending actions
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json approvals
-python -m agentvisa.operator --config .agentvisa.local.json inspect \
+python -m nodi.operator --config .nodi.local.json approvals
+python -m nodi.operator --config .nodi.local.json inspect \
   --agent procurement --request-id monitor-purchase-1
 ```
 
@@ -41,7 +41,7 @@ The fingerprint identifies the exact stored action, not a model's claim or a pol
 Copy the fingerprint from inspection into the command:
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json approve \
+python -m nodi.operator --config .nodi.local.json approve \
   --agent procurement --request-id monitor-purchase-1 --fingerprint EXACT_HASH_FROM_INSPECT
 ```
 
@@ -52,10 +52,10 @@ Approval does not execute the tool. The agent must retry its identical action an
 ## Modify, revoke and inspect delegation
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json modify \
+python -m nodi.operator --config .nodi.local.json modify \
   --visa VISA_ID --contract revised-contract.json
-python -m agentvisa.operator --config .agentvisa.local.json revoke --visa VISA_ID
-python -m agentvisa.operator --config .agentvisa.local.json delegations
+python -m nodi.operator --config .nodi.local.json revoke --visa VISA_ID
+python -m nodi.operator --config .nodi.local.json delegations
 ```
 
 Modification submits a complete reviewed contract and preserves the existing identity/mission. Edits and revocations invalidate pending and approved reviews for the affected subtree and remove them from the outstanding review queue. Revocation also blocks new descendant effects. Lifecycle audit records include `invalidated_reviews`; repeating revocation normally records zero newly invalidated reviews. Delegation output includes visa IDs, parent pointers, agents, status and cumulative spending; it does not create child credentials.
@@ -63,9 +63,9 @@ Modification submits a complete reviewed contract and preserves the existing ide
 ## Investigate decisions
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json audit --limit 25
-python -m agentvisa.operator --config .agentvisa.local.json audit --blocked --limit 25
-python -m agentvisa.operator --config .agentvisa.local.json integrity
+python -m nodi.operator --config .nodi.local.json audit --limit 25
+python -m nodi.operator --config .nodi.local.json audit --blocked --limit 25
+python -m nodi.operator --config .nodi.local.json integrity
 ```
 
 Limits range from 1 to 100. Lists return one oldest-first page plus `has_more`, `next_after` and `through`; continue with `--after` and `--through` using unchanged filters. Filtering happens in the database. `visas`, `approvals` and `delegations` support the same paging flags and `--agent`; approval queues also support `--include-expired`. See [pagination semantics](pagination.md), including mutable queues and database maintenance limitations. Integrity failure exits nonzero. The local audit hash chain is not externally anchored or tamper-proof.
@@ -81,7 +81,7 @@ See [audit exports and independently held checkpoints](audit-exports.md) for off
 ## Inspect inherited authority
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json inspect-visa --visa VISA_ID
+python -m nodi.operator --config .nodi.local.json inspect-visa --visa VISA_ID
 ```
 
 This reads one visa and its ancestors in a consistent database snapshot, ordered from leaf to root. Each node includes its contract, status, usage, remaining budget/actions and expiration. `effective_limits` takes the smallest remaining allowance, transaction cap, approval threshold and expiration across the chain. Tool/resource sets intersect all allowed sets and remove every ancestor’s forbidden entries. Usage above a newly reduced cap is displayed as zero remaining, never a negative allowance.

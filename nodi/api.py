@@ -101,7 +101,7 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
     """Tokens map to identities on the server, never from request agent_id fields."""
     if len(admin_token) < 32 or not agent_tokens or any(type(k) is not str or len(k) < 32 or type(v) is not str or not v for k, v in agent_tokens.items()) or admin_token in agent_tokens:
         raise ValueError("distinct admin/agent credentials of at least 32 characters required")
-    app = FastAPI(title="AgentVisa", version="0.1.0", description="Mission-scoped authorization and simulated protected execution.")
+    app = FastAPI(title="Nodi", version="0.1.0", description="Mission-scoped authorization and simulated protected execution.")
     from .dashboard import install_dashboard
     install_dashboard(app)
     app.add_middleware(BodyLimit)
@@ -228,10 +228,10 @@ def create_app(gateway: Gateway, admin_token: str, agent_tokens: dict[str, str])
 
 def from_environment() -> FastAPI:
     try:
-        admin_token = os.environ["AGENTVISA_ADMIN_TOKEN"]
-        agents = json.loads(os.environ["AGENTVISA_AGENT_TOKENS"])
+        admin_token = os.environ["NODI_ADMIN_TOKEN"]
+        agents = json.loads(os.environ["NODI_AGENT_TOKENS"])
         if not isinstance(agents, dict):
             raise ValueError("agent credentials must be a JSON object")
     except (KeyError, ValueError) as exc:
-        raise RuntimeError("Set AGENTVISA_ADMIN_TOKEN and AGENTVISA_AGENT_TOKENS before startup") from exc
-    return create_app(Gateway(os.environ.get("AGENTVISA_DB", "agentvisa.db")), admin_token, agents)
+        raise RuntimeError("Set NODI_ADMIN_TOKEN and NODI_AGENT_TOKENS before startup") from exc
+    return create_app(Gateway(os.environ.get("NODI_DB", "nodi.db")), admin_token, agents)

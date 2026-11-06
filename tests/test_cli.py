@@ -7,7 +7,7 @@ import sys
 
 def test_init_creates_private_distinct_credentials_and_refuses_overwrite(tmp_path):
     config = tmp_path / "private.json"
-    command = [sys.executable, "-m", "agentvisa", "init", "--config", str(config)]
+    command = [sys.executable, "-m", "nodi", "init", "--config", str(config)]
     result = subprocess.run(command, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     contents = config.read_text()

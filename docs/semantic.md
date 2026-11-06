@@ -12,7 +12,7 @@ To use an approved model-backed review service, add this object to the private l
 }
 ```
 
-The adapter POSTs protocol `agentvisa.intent.v1`, mission, canonical purpose, action, untrusted context and trusted effect metadata. The service invokes its selected model and returns exactly:
+The adapter POSTs protocol `nodi.intent.v1`, mission, canonical purpose, action, untrusted context and trusted effect metadata. The service invokes its selected model and returns exactly:
 
 ```json
 {

@@ -8,13 +8,13 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.audit_export import export_audit, save_checkpoint
-from agentvisa.audit_verify import ROOT, Verifier, checkpoint, load_checkpoint, strict_json, verify
-from agentvisa.gateway import Gateway
-from agentvisa.models import draft
-from agentvisa.queries import ReadModel
-from agentvisa.operator import parser, run
+from nodi.api import create_app
+from nodi.audit_export import export_audit, save_checkpoint
+from nodi.audit_verify import ROOT, Verifier, checkpoint, load_checkpoint, strict_json, verify
+from nodi.gateway import Gateway
+from nodi.models import draft
+from nodi.queries import ReadModel
+from nodi.operator import parser, run
 
 
 @pytest.fixture
@@ -41,8 +41,8 @@ def test_paginated_export_and_offline_cli(system, tmp_path):
     assert result['sequence'] == 30
     assert reads.checkpoint()['sequence'] == 31
     assert anchor.stat().st_mode & 0o777 == output.stat().st_mode & 0o777 == 0o600
-    env = {k: v for k, v in os.environ.items() if not k.startswith('AGENTVISA')}
-    proc = subprocess.run([sys.executable, '-m', 'agentvisa.audit_verify', '--checkpoint', str(anchor), '--audit', str(output)], env=env, capture_output=True, text=True)
+    env = {k: v for k, v in os.environ.items() if not k.startswith('NODI')}
+    proc = subprocess.run([sys.executable, '-m', 'nodi.audit_verify', '--checkpoint', str(anchor), '--audit', str(output)], env=env, capture_output=True, text=True)
     assert proc.returncode == 0 and json.loads(proc.stdout)['valid']
     original = output.read_bytes()
     with pytest.raises(FileExistsError):
@@ -50,7 +50,7 @@ def test_paginated_export_and_offline_cli(system, tmp_path):
     assert output.read_bytes() == original
     assert not list(tmp_path.glob('.audit-*'))
     output.write_bytes(b'')
-    proc = subprocess.run([sys.executable, '-m', 'agentvisa.audit_verify', '--checkpoint', str(anchor), '--audit', str(output)], env=env, capture_output=True)
+    proc = subprocess.run([sys.executable, '-m', 'nodi.audit_verify', '--checkpoint', str(anchor), '--audit', str(output)], env=env, capture_output=True)
     assert proc.returncode == 1
 
 

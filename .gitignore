@@ -12,4 +12,4 @@ build/
 dist/
 
 .DS_Store
-.agentvisa.local.json
+.nodi.local.json

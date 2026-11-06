@@ -18,17 +18,17 @@ Review date: October 28, 2026. Scope: the portfolio prototype requested in the o
 | Mission drift despite tool permission | Vendor email passes deterministic checks but intent denies payroll request | `tests/test_submission_acceptance.py` |
 | Prompt-injection attempt | Proposed file upload violates tool/resource constraints and is denied | `demo.py`, `tests/test_gateway.py` |
 | Delegation escalation | B can delegate another hop but cannot widen its budget for C | `tests/test_submission_acceptance.py` |
-| Adversarial evaluation | 42 curated cases, false-allow-first reporting, label validation, dataset digest and explicit denominators | `agentvisa/data/cases.json`, `tests/test_dataset.py`, `tests/test_evaluation_provenance.py` |
+| Adversarial evaluation | 42 curated cases, false-allow-first reporting, label validation, dataset digest and explicit denominators | `nodi/data/cases.json`, `tests/test_dataset.py`, `tests/test_evaluation_provenance.py` |
 | Usable integration and packaging | Agent-only MCP tools, human CLI, explicit-ID agent example, bundled dataset, clean-wheel checks | `tests/test_mcp.py`, `tests/test_agent_example.py`, `scripts/check_wheel.py` |
 
-Paths in the evidence column are repository-relative; core modules are under `agentvisa/`. Commands to reproduce the main evidence:
+Paths in the evidence column are repository-relative; core modules are under `nodi/`. Commands to reproduce the main evidence:
 
 ```sh
 python -m pytest -q
-python -m agentvisa demo
-python -m agentvisa evaluate
+python -m nodi demo
+python -m nodi evaluate
 python -m pip wheel . --no-deps --wheel-dir dist
-python scripts/check_wheel.py dist/agentvisa-0.1.0-py3-none-any.whl
+python scripts/check_wheel.py dist/nodi-0.1.0-py3-none-any.whl
 ```
 
 ## Findings addressed

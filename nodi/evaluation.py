@@ -18,7 +18,7 @@ def percentile(values, proportion):
 
 
 def run(dataset: str | None = None) -> dict:
-    source = Path(dataset) if dataset is not None else files("agentvisa").joinpath("data/cases.json")
+    source = Path(dataset) if dataset is not None else files("nodi").joinpath("data/cases.json")
     loaded = load_dataset(source)
     cases = loaded.cases
     records, latency, policy_latency = [], [], []

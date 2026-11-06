@@ -9,8 +9,8 @@ import pytest
 pytest.importorskip("mcp")
 import httpx2
 from mcp import Client, StdioServerParameters
-from agentvisa.api import ActionBody
-from agentvisa.mcp_server import GatewayClient, GatewayCallError, create_mcp
+from nodi.api import ActionBody
+from nodi.mcp_server import GatewayClient, GatewayCallError, create_mcp
 
 TOKEN = "agent-" + "x" * 40
 
@@ -98,7 +98,7 @@ def test_mcp_surface_has_no_human_controls_and_rejects_extra_fields():
 
 def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
     config_path = tmp_path / "config.json"
-    subprocess.run([sys.executable, "-m", "agentvisa", "init", "--config", str(config_path)], check=True, capture_output=True)
+    subprocess.run([sys.executable, "-m", "nodi", "init", "--config", str(config_path)], check=True, capture_output=True)
     config = json.loads(config_path.read_text())
     config["database"] = str(tmp_path / "state.db")
     config_path.write_text(json.dumps(config))
@@ -106,7 +106,7 @@ def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
     origin = f"http://127.0.0.1:{port}"
-    process = subprocess.Popen([sys.executable, "-m", "agentvisa", "serve", "--config", str(config_path), "--port", str(port)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    process = subprocess.Popen([sys.executable, "-m", "nodi", "serve", "--config", str(config_path), "--port", str(port)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         with httpx2.Client(base_url=origin, timeout=5, trust_env=False) as http:
             for _ in range(100):
@@ -121,8 +121,8 @@ def test_real_stdio_to_http_approval_replay_and_revocation(tmp_path):
             admin = {"Authorization": "Bearer " + config["admin_token"]}
             contract = http.post("/drafts", headers=admin, json={"mission": "Buy a monitor under $300.", "agent_id": "procurement"}).json()["contract"]
             visa = http.post("/visas", headers=admin, json=contract).json()["visa_id"]
-            params = StdioServerParameters(command=sys.executable, args=["-m", "agentvisa.mcp_server"],
-                                           env={"AGENTVISA_AGENT_TOKEN": next(iter(config["agent_tokens"])), "AGENTVISA_GATEWAY_URL": origin})
+            params = StdioServerParameters(command=sys.executable, args=["-m", "nodi.mcp_server"],
+                                           env={"NODI_AGENT_TOKEN": next(iter(config["agent_tokens"])), "NODI_GATEWAY_URL": origin})
             async def exercise():
                 async with Client(params) as mcp:
                     assert [tool.name for tool in (await mcp.list_tools()).tools] == ["execute_action", "get_request_status"]

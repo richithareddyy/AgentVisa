@@ -1,12 +1,12 @@
-# AgentVisa: mission-scoped authority for agents
+# Nodi: mission-scoped authority for agents
 
 **Give an agent limited authority without giving it unlimited trust.**
 
-AgentVisa is a working security-infrastructure prototype that places an authorization and execution boundary between an agent and protected tools. A human issues a temporary mission contract. Every proposed action is checked against that contract and its delegation ancestors before a simulated effect can be committed.
+Nodi is a working security-infrastructure prototype that places an authorization and execution boundary between an agent and protected tools. A human issues a temporary mission contract. Every proposed action is checked against that contract and its delegation ancestors before a simulated effect can be committed.
 
 ## Problem and approach
 
-Permission to call a tool does not establish that a particular use serves the authorized mission. An agent buying a monitor may be allowed to email an approved vendor, yet a message requesting payroll information is outside that purpose. AgentVisa combines exact constraints with a separate intent evaluator to distinguish these cases.
+Permission to call a tool does not establish that a particular use serves the authorized mission. An agent buying a monitor may be allowed to email an approved vendor, yet a message requesting payroll information is outside that purpose. Nodi combines exact constraints with a separate intent evaluator to distinguish these cases.
 
 The outcome is ALLOW, DENY or ASK_HUMAN. Deterministic checks enforce identity, tools, resources, budget, transaction size, action count, expiration and delegation depth. The intent layer supplies structured alignment/risk diagnostics and can require human review or deny an otherwise permitted action. It cannot override a hard policy failure.
 
@@ -37,6 +37,6 @@ The [demonstration guide](demonstration.md) provides commands and expected resul
 
 ## Scope and differentiation
 
-Agent identity, OAuth, attenuated capabilities and tool-call guardrails are established areas. The [ecosystem review](landscape.md) documents overlap; AgentVisa makes no uniqueness claim. Its portfolio contribution is the integration of mission contracts, ancestry-wide accounting, exact-action approval and adversarial evaluation in a compact runnable system.
+Agent identity, OAuth, attenuated capabilities and tool-call guardrails are established areas. The [ecosystem review](landscape.md) documents overlap; Nodi makes no uniqueness claim. Its portfolio contribution is the integration of mission contracts, ancestry-wide accounting, exact-action approval and adversarial evaluation in a compact runnable system.
 
 This is a local prototype with simulated effects, static bearer credentials and one administrator. It has no real payment/email provider, public deployment, tenant isolation, general-purpose model agent. The [local dashboard](dashboard.md) supports human-operated missions, simulated proposals, exact-action review and audit inspection. Agents must run outside the trusted gateway process without direct tool/database access. Audit checkpoints are unsigned and must be protected separately. Full assumptions and remaining production work are in [SECURITY.md](../SECURITY.md).

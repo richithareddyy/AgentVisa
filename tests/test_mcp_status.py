@@ -3,7 +3,7 @@ import pytest
 pytest.importorskip('mcp')
 import httpx2
 from mcp import Client
-from agentvisa.mcp_server import GatewayClient, GatewayCallError, StatusRequest, create_mcp
+from nodi.mcp_server import GatewayClient, GatewayCallError, StatusRequest, create_mcp
 
 TOKEN = 'a' * 40
 VALID = {'request_id': 'one', 'state': 'pending', 'fingerprint': 'a'*64,

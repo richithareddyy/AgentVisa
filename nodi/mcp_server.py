@@ -115,7 +115,7 @@ class GatewayClient:
 
 
 def create_mcp(client: GatewayClient) -> MCPServer:
-    server = MCPServer("AgentVisa", instructions=(
+    server = MCPServer("Nodi", instructions=(
         "Submit protected actions through execute_action. DENY and ASK_HUMAN do not execute. "
         "Only a human administrator can approve via the separate HTTP control API. "
         "On transport failure, outcome is unknown; inspect with get_request_status or retry the identical request_id and action. "
@@ -123,7 +123,7 @@ def create_mcp(client: GatewayClient) -> MCPServer:
 
     @server.tool(structured_output=True)
     async def execute_action(action: ActionBody) -> dict[str, Any]:
-        """Authorize and execute one exact action through the AgentVisa gateway.
+        """Authorize and execute one exact action through the Nodi gateway.
 
         Prices, destinations, identity, ancestry and approvals are checked by the
         gateway. Keep the same request_id for retries; new actions need new IDs.
@@ -144,10 +144,10 @@ def create_mcp(client: GatewayClient) -> MCPServer:
 
 def main():
     try:
-        token = os.environ["AGENTVISA_AGENT_TOKEN"]
-        client = GatewayClient(os.environ.get("AGENTVISA_GATEWAY_URL", "http://127.0.0.1:8000"), token)
+        token = os.environ["NODI_AGENT_TOKEN"]
+        client = GatewayClient(os.environ.get("NODI_GATEWAY_URL", "http://127.0.0.1:8000"), token)
     except (KeyError, ValueError):
-        raise SystemExit("Configure AGENTVISA_AGENT_TOKEN and a valid AGENTVISA_GATEWAY_URL") from None
+        raise SystemExit("Configure NODI_AGENT_TOKEN and a valid NODI_GATEWAY_URL") from None
     # stdout is reserved for MCP protocol messages.
     create_mcp(client).run(transport="stdio")
 

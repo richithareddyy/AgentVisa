@@ -3,16 +3,16 @@
 Start the server from the repository with your environment activated:
 
 ```sh
-python -m agentvisa serve
+python -m nodi serve
 ```
 
-Open **http://127.0.0.1:8000/**. If an older server is already running, stop it with Control+C in its terminal, then run the command again. If the default port is busy, use `python -m agentvisa serve --port 8002` and open `http://127.0.0.1:8002/`.
+Open **http://127.0.0.1:8000/**. If an older server is already running, stop it with Control+C in its terminal, then run the command again. If the default port is busy, use `python -m nodi serve --port 8002` and open `http://127.0.0.1:8002/`.
 
 The dashboard is included in both source and wheel installations. The API reference remains at `/docs`.
 
 ## Connect
 
-Choose `.agentvisa.local.json` from your AgentVisa folder. On macOS, Command+Shift+. reveals hidden files in the file picker. The page reads the configuration locally, selects the configured agent (or lets you choose among several), and sends only the appropriate bearer credential to existing same-origin API endpoints. You can instead enter separate administrator and agent tokens manually.
+Choose `.nodi.local.json` from your Nodi folder. On macOS, Command+Shift+. reveals hidden files in the file picker. The page reads the configuration locally, selects the configured agent (or lets you choose among several), and sends only the appropriate bearer credential to existing same-origin API endpoints. You can instead enter separate administrator and agent tokens manually.
 
 This is a trusted human operator console: it can hold both roles for demonstration. Do not give its configuration to an autonomous agent. No credential-loading server endpoint, cookie login, or relaxed authorization was added. Credentials and displayed records are cleared on disconnect or page reload; the dashboard does not use local/session storage. Browser extensions or an untrusted browser can still access sensitive page data. Use a trusted local browser.
 

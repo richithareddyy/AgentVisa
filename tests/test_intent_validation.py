@@ -2,11 +2,11 @@ from dataclasses import replace
 import io
 import json
 import pytest
-from agentvisa.gateway import Gateway
-from agentvisa.intent import Intent
-from agentvisa.models import Action, draft
-from agentvisa.semantic import SemanticReviewer
-from agentvisa.tools import prepare
+from nodi.gateway import Gateway
+from nodi.intent import Intent
+from nodi.models import Action, draft
+from nodi.semantic import SemanticReviewer
+from nodi.tools import prepare
 
 VALID = Intent(.99, .01, 'Within mission', [], 'ALLOW')
 

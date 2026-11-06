@@ -5,16 +5,16 @@ import sys
 
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.gateway import Gateway
-from agentvisa.models import draft
-from agentvisa.storage import UnsafeStoreError, private_database
+from nodi.api import create_app
+from nodi.gateway import Gateway
+from nodi.models import draft
+from nodi.storage import UnsafeStoreError, private_database
 
 
 @pytest.mark.skipif(os.name != 'posix', reason='POSIX file security')
 def test_private_creation_under_permissive_umask(tmp_path):
     path = tmp_path / 'state.db'
-    code = 'import os,sys; from agentvisa.gateway import Gateway; os.umask(0); Gateway(sys.argv[1])'
+    code = 'import os,sys; from nodi.gateway import Gateway; os.umask(0); Gateway(sys.argv[1])'
     result = subprocess.run([sys.executable, '-c', code, str(path)], capture_output=True)
     assert result.returncode == 0, result.stderr
     assert stat.S_IMODE(path.stat().st_mode) == 0o600

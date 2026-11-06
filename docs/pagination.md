@@ -45,10 +45,10 @@ Values are parameterized in SQL. Agent strings cannot alter SQL structure. Addit
 ## CLI
 
 ```sh
-python -m agentvisa.operator --config .agentvisa.local.json audit --limit 25 --blocked
-python -m agentvisa.operator --config .agentvisa.local.json audit --limit 25 --after CURSOR --through UPPER_BOUND --blocked
-python -m agentvisa.operator --config .agentvisa.local.json visas --agent procurement --limit 10
-python -m agentvisa.operator --config .agentvisa.local.json approvals --include-expired --limit 10
+python -m nodi.operator --config .nodi.local.json audit --limit 25 --blocked
+python -m nodi.operator --config .nodi.local.json audit --limit 25 --after CURSOR --through UPPER_BOUND --blocked
+python -m nodi.operator --config .nodi.local.json visas --agent procurement --limit 10
+python -m nodi.operator --config .nodi.local.json approvals --include-expired --limit 10
 ```
 
 CLI output uses `audit`, `visas`, `approvals` or `delegations` as its item key and retains `has_more`, `next_after` and `through`. It fetches one page per command and never silently fetches all pages. Audit output is now oldest-first within the selected cursor range, rather than the earlier CLI's last-N snapshot behavior.

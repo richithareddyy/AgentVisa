@@ -308,7 +308,7 @@ bind("config-file", "change", async () => {
   try {
     c = JSON.parse(await file.text());
   } catch {
-    throw Error("Choose a valid AgentVisa JSON configuration.");
+    throw Error("Choose a valid Nodi JSON configuration.");
   }
   const entries = Object.entries(c.agent_tokens || {});
   if (

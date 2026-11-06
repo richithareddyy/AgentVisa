@@ -8,11 +8,11 @@ import time
 from urllib.error import HTTPError, URLError
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.gateway import Gateway
-from agentvisa.models import Action, draft
-from agentvisa.queries import ReadModel
-from agentvisa.operator import ControlClient, OperatorError, parser, run
+from nodi.api import create_app
+from nodi.gateway import Gateway
+from nodi.models import Action, draft
+from nodi.queries import ReadModel
+from nodi.operator import ControlClient, OperatorError, parser, run
 
 ADMIN = "admin-" + "a" * 40
 AGENT = "agent-" + "b" * 40
@@ -139,7 +139,7 @@ def test_control_timeout_reports_unknown_outcome():
 
 
 def test_missing_operator_config_fails_cleanly(tmp_path):
-    from agentvisa.operator import main
+    from nodi.operator import main
     with pytest.raises(SystemExit) as error:
         main(["--config", str(tmp_path / "missing.json"), "visas"])
     assert error.value.code == 1
@@ -154,9 +154,9 @@ def test_cli_against_real_server(tmp_path):
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0)); port = sock.getsockname()[1]
     origin = f"http://127.0.0.1:{port}"
-    server = subprocess.Popen([sys.executable, "-m", "agentvisa", "serve", "--config", str(config), "--port", str(port)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    server = subprocess.Popen([sys.executable, "-m", "nodi", "serve", "--config", str(config), "--port", str(port)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     def command(*args):
-        result = subprocess.run([sys.executable, "-m", "agentvisa.operator", "--url", origin, "--config", str(operator_config), *args], capture_output=True, text=True, timeout=15)
+        result = subprocess.run([sys.executable, "-m", "nodi.operator", "--url", origin, "--config", str(operator_config), *args], capture_output=True, text=True, timeout=15)
         assert result.returncode == 0, result.stderr
         assert "\x1b" not in result.stdout
         assert ADMIN not in result.stdout + result.stderr
@@ -182,7 +182,7 @@ def test_cli_against_real_server(tmp_path):
             command("revoke", "--visa", visa)
             assert command("integrity")["valid"]
             assert len(command("audit", "--limit", "2")["audit"]) == 2
-            denied = subprocess.run([sys.executable, "-m", "agentvisa.operator", "--url", origin, "visas"], env={**os.environ, "AGENTVISA_ADMIN_TOKEN": AGENT}, capture_output=True, text=True)
+            denied = subprocess.run([sys.executable, "-m", "nodi.operator", "--url", origin, "visas"], env={**os.environ, "NODI_ADMIN_TOKEN": AGENT}, capture_output=True, text=True)
             assert denied.returncode == 1
             assert "403" in denied.stderr and AGENT not in denied.stderr
     finally:

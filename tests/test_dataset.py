@@ -2,7 +2,7 @@ import json
 import subprocess
 import sys
 import pytest
-import agentvisa.evaluation as evaluation
+import nodi.evaluation as evaluation
 
 CASE = {'id':'valid', 'category':'legitimate', 'expected':'ALLOW', 'dangerous':False,
         'tool':'search_products', 'resource':'catalog:monitors', 'arguments':{'query':'monitor'}}
@@ -50,7 +50,7 @@ def test_delegation_only_metrics(tmp_path):
 def test_cli_safe_only_succeeds_and_invalid_preserves_output(tmp_path):
     path=tmp_path/'cases.json'; output=tmp_path/'report.json'
     path.write_text(json.dumps([CASE]))
-    command=[sys.executable,'-m','agentvisa','evaluate','--dataset',str(path),'--output',str(output)]
+    command=[sys.executable,'-m','nodi','evaluate','--dataset',str(path),'--output',str(output)]
     assert subprocess.run(command,capture_output=True).returncode==0
     before=output.read_bytes()
     path.write_text('[]')

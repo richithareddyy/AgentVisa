@@ -2,7 +2,7 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const p = vm.runInNewContext(fs.readFileSync('agentvisa/web/presentation.js', 'utf8') + '\npresentation;');
+const p = vm.runInNewContext(fs.readFileSync('nodi/web/presentation.js', 'utf8') + '\npresentation;');
 test('budget denial includes exact authoritative remaining amount', () => {
   const r = {decision:'DENY', remaining_budget_cents:2500, cost_cents:18000, policy_checks:[{check:'cumulative_budget', passed:false}]};
   assert.equal(p.budget(r), '$25.00 remaining; this action costs $180.00.');

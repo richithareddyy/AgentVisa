@@ -1,10 +1,10 @@
 import io
 import json
 import pytest
-from agentvisa.intent import Intent
-from agentvisa.models import Action, draft
-from agentvisa.semantic import SemanticReviewer
-from agentvisa.tools import prepare
+from nodi.intent import Intent
+from nodi.models import Action, draft
+from nodi.semantic import SemanticReviewer
+from nodi.tools import prepare
 
 
 def reviewer(decision="ALLOW", score=.99):
@@ -12,7 +12,7 @@ def reviewer(decision="ALLOW", score=.99):
     class Stub:
         def open(self, request, timeout):
             assert timeout <= 5
-            assert json.loads(request.data)["protocol"] == "agentvisa.intent.v1"
+            assert json.loads(request.data)["protocol"] == "nodi.intent.v1"
             return io.BytesIO(json.dumps(Intent(score, .01, "review", [], decision).dictionary()).encode())
     r.opener = Stub()
     return r

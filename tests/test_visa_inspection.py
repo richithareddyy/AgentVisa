@@ -1,11 +1,11 @@
 from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.gateway import Gateway
-from agentvisa.models import Action, draft
-from agentvisa.queries import ReadModel
-from agentvisa.operator import parser, run
+from nodi.api import create_app
+from nodi.gateway import Gateway
+from nodi.models import Action, draft
+from nodi.queries import ReadModel
+from nodi.operator import parser, run
 
 
 @pytest.fixture

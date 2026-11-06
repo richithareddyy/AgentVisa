@@ -11,7 +11,7 @@ This implementation requires a POSIX host with `O_NOFOLLOW`, such as macOS or Li
 Older installations may have database files with mode `0644`. Stop all gateway processes and inspect the database, directory ownership, file type, links and any sidecars before restarting. For a verified, operator-owned regular database, explicitly restrict its mode:
 
 ```sh
-chmod 600 agentvisa.db
+chmod 600 nodi.db
 ```
 
 Apply owner-only permissions to any existing SQLite sidecars as well, after inspecting them. Do not delete journal or WAL files to bypass a check: they may be necessary for recovery. Do not change unrelated files, follow unexpected links or discard the ledger. Keep backups private too. Once the files satisfy the checks, the existing schema and records remain usable without conversion.

@@ -14,7 +14,7 @@ def main():
     parser.add_argument('wheel', type=Path)
     args = parser.parse_args()
     wheel = args.wheel.resolve(strict=True)
-    with tempfile.TemporaryDirectory(prefix='agentvisa-package-') as directory:
+    with tempfile.TemporaryDirectory(prefix='nodi-package-') as directory:
         root = Path(directory)
         environment = root / 'environment'
         venv.EnvBuilder(with_pip=True).create(environment)
@@ -23,17 +23,17 @@ def main():
         # installation is needed to prove that the wheel contains its own dataset.
         subprocess.run([str(python), '-I', '-m', 'pip', 'install', '--no-index', '--no-deps', str(wheel)],
                        cwd=root, check=True, capture_output=True, text=True)
-        origin = subprocess.run([str(python), '-I', '-c', 'import agentvisa; print(agentvisa.__file__)'],
+        origin = subprocess.run([str(python), '-I', '-c', 'import nodi; print(nodi.__file__)'],
                                 cwd=root, check=True, capture_output=True, text=True).stdout.strip()
         if not Path(origin).resolve().is_relative_to(environment.resolve()):
             raise RuntimeError('package resolved outside the clean environment')
         def command(name):
-            result = subprocess.run([str(python), '-I', '-m', 'agentvisa', name], cwd=root,
+            result = subprocess.run([str(python), '-I', '-m', 'nodi', name], cwd=root,
                                     check=True, capture_output=True, text=True)
             return json.loads(result.stdout)
         evaluation = command('evaluate')
         with zipfile.ZipFile(wheel) as archive:
-            expected_digest = hashlib.sha256(archive.read('agentvisa/data/cases.json')).hexdigest()
+            expected_digest = hashlib.sha256(archive.read('nodi/data/cases.json')).hexdigest()
         if evaluation.get('dataset_sha256') != expected_digest:
             raise RuntimeError('installed evaluation used a different dataset')
         demo = command('demo')

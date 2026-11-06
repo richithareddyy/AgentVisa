@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.gateway import Gateway
+from nodi.api import create_app
+from nodi.gateway import Gateway
 
 ADMIN, AGENT, OTHER = "admin-" + "x" * 40, "agent-" + "y" * 40, "other-" + "z" * 40
 

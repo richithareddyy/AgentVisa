@@ -1,6 +1,6 @@
-# AgentVisa
+# Nodi
 
-You ask an AI agent to buy a monitor within a budget. What stops it from overspending, sharing unrelated files, or giving another agent more permission than it has? AgentVisa checks each proposed tool action against limits you set for the task, then allows it, blocks it, or asks for your approval.
+You ask an AI agent to buy a monitor within a budget. What stops it from overspending, sharing unrelated files, or giving another agent more permission than it has? Nodi checks each proposed tool action against limits you set for the task, then allows it, blocks it, or asks for your approval.
 
 **[Try the sandbox](https://agentvisa.onrender.com)** — the free instance may take a moment to wake up. Tools are simulated, and the intent check currently covers monitor procurement. This is a prototype, not a general defense against prompt injection.
 
@@ -24,15 +24,15 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[test]' -c requirements.lock
 python -m pytest -q
-python -m agentvisa demo
-python -m agentvisa init
-python -m agentvisa serve
+python -m nodi demo
+python -m nodi init
+python -m nodi serve
 ```
 
-Open http://127.0.0.1:8000. `init` creates separate administrator and agent credentials in `.agentvisa.local.json`; keep that file private.
+Open http://127.0.0.1:8000. `init` creates separate administrator and agent credentials in `.nodi.local.json`; keep that file private.
 
 ## What the tests establish
 
-Tests cover budget races, delegation, approval replay, expiry, and rollback. The [42 evaluation cases](agentvisa/data/cases.json) were developed alongside the code: they are regression checks, not an independent security benchmark. Intent scores are heuristic, not probabilities.
+Tests cover budget races, delegation, approval replay, expiry, and rollback. The [42 evaluation cases](nodi/data/cases.json) were developed alongside the code: they are regression checks, not an independent security benchmark. Intent scores are heuristic, not probabilities.
 
 [Detailed walkthrough and results](GUIDE.md) · [Architecture](docs/architecture.md) · [Security limits](SECURITY.md) · [Evaluation](docs/evaluation.md)

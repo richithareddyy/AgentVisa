@@ -10,7 +10,7 @@ import time
 from urllib.error import HTTPError
 import pytest
 import httpx
-from agentvisa.models import draft
+from nodi.models import draft
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'examples' / 'agent_client.py'
 spec = importlib.util.spec_from_file_location('agent_example', SCRIPT)
@@ -51,9 +51,9 @@ def test_real_example_retry_status_and_identity(tmp_path):
         sock.bind(('127.0.0.1',0))
         port=sock.getsockname()[1]
     origin=f'http://127.0.0.1:{port}'
-    server=subprocess.Popen([sys.executable,'-m','agentvisa','serve','--config',str(config),'--port',str(port)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    server=subprocess.Popen([sys.executable,'-m','nodi','serve','--config',str(config),'--port',str(port)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     def command(*args, token=TOKEN):
-        proc=subprocess.run([sys.executable,str(SCRIPT),'--url',origin,*args],env={**os.environ,'AGENTVISA_AGENT_TOKEN':token},capture_output=True,text=True,timeout=15)
+        proc=subprocess.run([sys.executable,str(SCRIPT),'--url',origin,*args],env={**os.environ,'NODI_AGENT_TOKEN':token},capture_output=True,text=True,timeout=15)
         assert proc.returncode==0,proc.stderr
         assert token not in proc.stdout+proc.stderr
         return json.loads(proc.stdout)

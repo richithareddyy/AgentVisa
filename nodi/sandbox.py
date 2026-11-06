@@ -45,7 +45,7 @@ class Sandbox:
             if len(self.workspaces) >= self.capacity or len(self.starts) >= 12:
                 return 429, {"detail": "The demo is busy. Please try again in a few minutes."}
             self.starts.append(now)
-            directory = tempfile.TemporaryDirectory(prefix="agentvisa-sandbox-")
+            directory = tempfile.TemporaryDirectory(prefix="nodi-sandbox-")
             try:
                 gateway = Gateway(directory.name + "/sandbox.db")
                 visa = gateway.issue(draft("Buy a monitor under $300.", "procurement"))["visa_id"]

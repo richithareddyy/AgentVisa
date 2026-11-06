@@ -1,9 +1,9 @@
 from dataclasses import replace
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.api import create_app
-from agentvisa.gateway import Gateway
-from agentvisa.models import Action, draft
+from nodi.api import create_app
+from nodi.gateway import Gateway
+from nodi.models import Action, draft
 
 
 @pytest.fixture

@@ -11,8 +11,8 @@ Human operator ─────────────────────�
 
 ```sh
 python -m pip install -e '.[test,mcp]' -c requirements.lock
-python -m agentvisa init
-python -m agentvisa serve
+python -m nodi init
+python -m nodi serve
 ```
 
 If a private config already exists, skip `init`; it never overwrites credentials. Use the human administrator API to issue a visa for the configured `procurement` identity. The agent needs only its own token and the issued visa ID, never the entire private config.
@@ -21,11 +21,11 @@ In your MCP host, configure a stdio server with these fields (replace the placeh
 
 ```json
 {
-  "command": "/absolute/path/to/AgentVisa/.venv/bin/python",
-  "args": ["-m", "agentvisa.mcp_server"],
+  "command": "/absolute/path/to/Nodi/.venv/bin/python",
+  "args": ["-m", "nodi.mcp_server"],
   "env": {
-    "AGENTVISA_GATEWAY_URL": "http://127.0.0.1:8000",
-    "AGENTVISA_AGENT_TOKEN": "replace-with-agent-only-credential"
+    "NODI_GATEWAY_URL": "http://127.0.0.1:8000",
+    "NODI_AGENT_TOKEN": "replace-with-agent-only-credential"
   }
 }
 ```
@@ -50,7 +50,7 @@ Invoke `execute_action` with an `action` object:
 
 The structured result preserves the gateway's ALLOW, DENY or ASK_HUMAN decision. ALLOW reports a committed simulated effect or replay of an earlier effect. ASK_HUMAN is not permission to execute elsewhere. A human reviews the exact stored action via `/control` and `/approvals`; the agent then retries the identical action and request ID. A changed action must use a new request ID.
 
-To exercise a real SDK client, set `AGENTVISA_AGENT_TOKEN`, `AGENTVISA_GATEWAY_URL` and `AGENTVISA_VISA_ID` in the client environment, then run:
+To exercise a real SDK client, set `NODI_AGENT_TOKEN`, `NODI_GATEWAY_URL` and `NODI_VISA_ID` in the client environment, then run:
 
 ```sh
 python examples/mcp_client.py --request-id monitor-search-1

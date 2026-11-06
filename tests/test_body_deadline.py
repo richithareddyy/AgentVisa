@@ -1,7 +1,7 @@
 import asyncio
 import pytest
-import agentvisa.api as api
-from agentvisa.api import BodyLimit
+import nodi.api as api
+from nodi.api import BodyLimit
 
 
 @pytest.mark.parametrize('value', [0, -1, True, None, float('nan'), float('inf')])

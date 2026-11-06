@@ -1,6 +1,6 @@
-# AgentVisa
+# Nodi
 
-Permission to call a tool doesn't mean a particular call serves the job you gave the agent. An agent buying a monitor may be allowed to email an approved vendor, but a message asking that vendor for payroll data is outside its purpose. AgentVisa sits between the agent and its tools: a human issues a temporary mission contract, and every proposed action is checked against it before anything runs.
+Permission to call a tool doesn't mean a particular call serves the job you gave the agent. An agent buying a monitor may be allowed to email an approved vendor, but a message asking that vendor for payroll data is outside its purpose. Nodi sits between the agent and its tools: a human issues a temporary mission contract, and every proposed action is checked against it before anything runs.
 
 ```text
 Agent → Gateway → Identity + contract + ancestors → Policy + intent
@@ -33,7 +33,7 @@ Python, FastAPI, and SQLite, with a small custom policy engine and an optional M
 
 ## Evaluation
 
-The pytest suite covers authorization bypasses, approval replay, budget races, delegation escalation, revocation, and rollback, and CI runs it on Python 3.11 and 3.14. The [42-case dataset](agentvisa/data/cases.json) mixes legitimate, ambiguous, malicious, and drifting actions, and the [reference results](evaluation/results.json) show zero automatic allows among the 33 cases labeled dangerous or review-required.
+The pytest suite covers authorization bypasses, approval replay, budget races, delegation escalation, revocation, and rollback, and CI runs it on Python 3.11 and 3.14. The [42-case dataset](nodi/data/cases.json) mixes legitimate, ambiguous, malicious, and drifting actions, and the [reference results](evaluation/results.json) show zero automatic allows among the 33 cases labeled dangerous or review-required.
 
 Those cases were developed alongside the code, so they work as regression tests. They aren't a held-out benchmark or an estimate of a real false-allow rate. The intent baseline is a narrow heuristic and its scores aren't calibrated. See [metric definitions](docs/evaluation.md) and [security assumptions and production gaps](SECURITY.md).
 
@@ -46,12 +46,12 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[test]' -c requirements.lock
 python -m pytest -q
-python -m agentvisa demo
-python -m agentvisa evaluate
-python -m agentvisa init
-python -m agentvisa serve
+python -m nodi demo
+python -m nodi evaluate
+python -m nodi init
+python -m nodi serve
 ```
 
-`init` writes `.agentvisa.local.json` with separate administrator and agent credentials; keep it private and give an agent only its own token. The dashboard is at http://127.0.0.1:8000/ and the API docs at `/docs`.
+`init` writes `.nodi.local.json` with separate administrator and agent credentials; keep it private and give an agent only its own token. The dashboard is at http://127.0.0.1:8000/ and the API docs at `/docs`.
 
 [Demo walkthrough](docs/demonstration.md) · [Dashboard](docs/dashboard.md) · [Operator CLI](docs/operator.md) · [API](docs/api.md) · [MCP](docs/mcp.md) · [Audit exports](docs/audit-exports.md) · [Hosting](docs/hosting.md) · [Release notes](RELEASE.md)

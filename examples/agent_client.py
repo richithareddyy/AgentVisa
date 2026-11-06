@@ -7,7 +7,7 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, ProxyHandler, HTTPRedirectHandler, build_opener
-from agentvisa.transport import gateway_origin
+from nodi.transport import gateway_origin
 
 
 class ClientError(RuntimeError):
@@ -79,10 +79,10 @@ def main(argv=None):
         command = commands.add_parser(name)
         command.add_argument('--request-id', required=True)
         if name == 'search':
-            command.add_argument('--visa', default=os.environ.get('AGENTVISA_VISA_ID'))
+            command.add_argument('--visa', default=os.environ.get('NODI_VISA_ID'))
     args = parser.parse_args(argv)
     try:
-        client = AgentClient(args.url, os.environ['AGENTVISA_AGENT_TOKEN'])
+        client = AgentClient(args.url, os.environ['NODI_AGENT_TOKEN'])
         result = client.call(args.command, args.request_id, getattr(args, 'visa', None))
         print(json.dumps(result, indent=2, ensure_ascii=True))
         return 0

@@ -1,12 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
-from agentvisa.hosted import create_hosted_app
+from nodi.hosted import create_hosted_app
 
 
 def configure(monkeypatch, path):
-    monkeypatch.setenv('AGENTVISA_ADMIN_TOKEN', 'a' * 40)
-    monkeypatch.setenv('AGENTVISA_AGENT_TOKEN', 'b' * 40)
-    monkeypatch.setenv('AGENTVISA_DB', str(path))
+    monkeypatch.setenv('NODI_ADMIN_TOKEN', 'a' * 40)
+    monkeypatch.setenv('NODI_AGENT_TOKEN', 'b' * 40)
+    monkeypatch.setenv('NODI_DB', str(path))
 
 
 def test_hosted_restart_preserves_state_and_roles(monkeypatch, tmp_path):
@@ -26,7 +26,7 @@ def test_hosted_restart_preserves_state_and_roles(monkeypatch, tmp_path):
     assert path.stat().st_mode & 0o777 == 0o600
 
 
-@pytest.mark.parametrize('key,value', [('AGENTVISA_ADMIN_TOKEN',''),('AGENTVISA_AGENT_TOKEN','short'),('AGENTVISA_AGENT_TOKEN','a'*40),('AGENTVISA_DB','relative.db'),('AGENTVISA_DB','')])
+@pytest.mark.parametrize('key,value', [('NODI_ADMIN_TOKEN',''),('NODI_AGENT_TOKEN','short'),('NODI_AGENT_TOKEN','a'*40),('NODI_DB','relative.db'),('NODI_DB','')])
 def test_hosted_rejects_incomplete_configuration(monkeypatch, tmp_path, key, value):
     path = tmp_path / 'state.db'
     configure(monkeypatch, path)
@@ -37,9 +37,9 @@ def test_hosted_rejects_incomplete_configuration(monkeypatch, tmp_path, key, val
 
 
 def test_hosted_dashboard_discloses_temporary_storage(monkeypatch, tmp_path):
-    monkeypatch.setenv("AGENTVISA_ADMIN_TOKEN", "a" * 40)
-    monkeypatch.setenv("AGENTVISA_AGENT_TOKEN", "b" * 40)
-    monkeypatch.setenv("AGENTVISA_DB", str(tmp_path / "demo.db"))
+    monkeypatch.setenv("NODI_ADMIN_TOKEN", "a" * 40)
+    monkeypatch.setenv("NODI_AGENT_TOKEN", "b" * 40)
+    monkeypatch.setenv("NODI_DB", str(tmp_path / "demo.db"))
     with TestClient(create_hosted_app()) as client:
         page = client.get("/")
         assert "Temporary demo:" in page.text
