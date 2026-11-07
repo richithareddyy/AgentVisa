@@ -2,7 +2,7 @@
 
 You ask an AI agent to buy a monitor within a budget. What stops it from overspending, sharing unrelated files, or giving another agent more permission than it has? Nodi checks each proposed tool action against limits you set for the task, then allows it, blocks it, or asks for your approval.
 
-**[Try the sandbox](https://agentvisa.onrender.com)** — the free instance may take a moment to wake up. Tools are simulated, and the intent check currently covers monitor procurement. This is a prototype, not a general defense against prompt injection.
+**[Try the sandbox](https://nodi-7fsc.onrender.com/)** — the free instance may take a moment to wake up. Tools are simulated, and the intent check currently covers monitor procurement. This is a prototype, not a general defense against prompt injection.
 
 ## What gets checked
 
