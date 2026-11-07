@@ -180,7 +180,8 @@ function view(name) {
   if (document.body.dataset.hosted === "true") $("connection").hidden = true;
   $("page-title").textContent = titles[name];
   updateGuide();
-  ( $("page-heading").hidden ? $("welcome") : $("page-title") ).scrollIntoView({ block: "start" });
+  if (document.body.dataset.screen === "landing") window.scrollTo({top:0,behavior:"instant"});
+  else $("page-title").scrollIntoView({block:"start"});
 }
 document
   .querySelectorAll(".nav")
